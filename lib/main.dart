@@ -121,32 +121,32 @@ class HomePage extends StatelessWidget {
                 MusicCard(
                   title: 'Remedy',
                   artist: 'Annie',
-                  image: 'assets/images/c2.jpg',
-                  audioPath: 'music.mp3',
+                  image: 'assets/images/c1.jpg',
+                  audioPath: 'LMusics/m2.mp3',
                 ),
                 MusicCard(
                   title: 'Dream',
                   artist: 'Lisa',
-                  image: 'assets/images/c5.jpg',
-                  audioPath: 'music.mp3',
+                  image: 'assets/images/c1.jpg',
+                  audioPath: 'LMusics/m3.mp3',
                 ),
                 MusicCard(
                   title: 'Sky',
                   artist: 'John',
-                  image: 'assets/images/c6.jpg',
-                  audioPath: 'music.mp3',
+                  image: 'assets/images/c1.jpg',
+                  audioPath: 'LMusics/m4.mp3',
                 ),
                 MusicCard(
                   title: 'Moon',
                   artist: 'Ella',
-                  image: 'assets/images/c7.jpg',
-                  audioPath: 'music.mp3',
+                  image: 'assets/images/c1.jpg',
+                  audioPath: 'LMusics/m5.mp3',
                 ),
                 MusicCard(
                   title: 'Star',
                   artist: 'Mike',
-                  image: 'assets/images/c8.jpg',
-                  audioPath: 'music.mp3',
+                  image: 'assets/images/c1.jpg',
+                  audioPath: 'LMusics/m6.mp3',
                 ),
               ]),
               SizedBox(height: 24),
@@ -156,38 +156,38 @@ class HomePage extends StatelessWidget {
                 MusicCard(
                   title: 'Faith',
                   artist: 'Nurko',
-                  image: 'assets/images/c3.jpg',
-                  audioPath: 'music.mp3',
+                  image: 'assets/images/c1.jpg',
+                  audioPath: 'LMusics/m7.mp3',
                 ),
                 MusicCard(
                   title: 'Remedy',
                   artist: 'Annie',
-                  image: 'assets/images/c4.jpg',
-                  audioPath: 'music.mp3',
+                  image: 'assets/images/c1.jpg',
+                  audioPath: 'LMusics/m8.mp3',
                 ),
                 MusicCard(
                   title: 'Light',
                   artist: 'Sara',
-                  image: 'assets/images/c9.jpg',
-                  audioPath: 'music.mp3',
+                  image: 'assets/images/c1.jpg',
+                  audioPath: 'LMusics/m9.mp3',
                 ),
                 MusicCard(
                   title: 'Echo',
                   artist: 'Tom',
-                  image: 'assets/images/c10.jpg',
-                  audioPath: 'music.mp3',
+                  image: 'assets/images/c1.jpg',
+                  audioPath: 'LMusics/m10.mp3',
                 ),
                 MusicCard(
                   title: 'Wave',
                   artist: 'Luna',
-                  image: 'assets/images/c11.jpg',
-                  audioPath: 'music.mp3',
+                  image: 'assets/images/c1.jpg',
+                  audioPath: 'LMusics/m11.mp3',
                 ),
                 MusicCard(
                   title: 'Glow',
                   artist: 'Alex',
-                  image: 'assets/images/c12.jpg',
-                  audioPath: 'music.mp3',
+                  image: 'assets/images/c1.jpg',
+                  audioPath: 'LMusics/m12.mp3',
                 ),
               ]),
             ],
@@ -220,6 +220,9 @@ class HomePage extends StatelessWidget {
   }
 }
 
+
+
+
 class MusicCard extends StatefulWidget {
   final String title;
   final String artist;
@@ -239,19 +242,12 @@ class MusicCard extends StatefulWidget {
 }
 
 class _MusicCardState extends State<MusicCard> {
-  bool _isPlaying = false;
   Duration _position = Duration.zero;
 
   @override
   void initState() {
     super.initState();
-    globalAudioPlayer.onPlayerStateChanged.listen((state) {
-      if (mounted) {
-        setState(() {
-          _isPlaying = state == PlayerState.playing && currentAudioPath == widget.audioPath;
-        });
-      }
-    });
+    // فقط به موقعیت موزیک گوش می‌دیم، نه وضعیت پخش
     globalAudioPlayer.onPositionChanged.listen((position) {
       if (mounted) {
         setState(() {
@@ -262,23 +258,25 @@ class _MusicCardState extends State<MusicCard> {
   }
 
   Future<void> _togglePlay() async {
-    if (_isPlaying && currentAudioPath == widget.audioPath) {
+    // اگه این موزیک در حال پخش باشه، متوقفش کن
+    if (currentAudioPath == widget.audioPath && (await globalAudioPlayer.state == PlayerState.playing)) {
       await globalAudioPlayer.pause();
-      setState(() {
-        _isPlaying = false;
-      });
     } else {
+      // اگه موزیک دیگه‌ای در حال پخش باشه، متوقفش کن
       await globalAudioPlayer.stop();
+      // موزیک جدید رو پخش کن
       currentAudioPath = widget.audioPath;
       await globalAudioPlayer.play(AssetSource(widget.audioPath));
-      setState(() {
-        _isPlaying = true;
-      });
     }
+    // به‌روزرسانی UI
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
+    // بررسی وضعیت پخش: اگه این موزیک در حال پخش باشه، دکمه "Pause" نشون بده
+    bool isPlaying = currentAudioPath == widget.audioPath && globalAudioPlayer.state == PlayerState.playing;
+
     return SizedBox(
       width: 180,
       child: ClipRRect(
@@ -299,7 +297,7 @@ class _MusicCardState extends State<MusicCard> {
                         artist: widget.artist,
                         image: widget.image,
                         audioPath: widget.audioPath,
-                        isPlaying: _isPlaying,
+                        isPlaying: isPlaying,
                         position: _position,
                       ),
                     ),
@@ -335,7 +333,7 @@ class _MusicCardState extends State<MusicCard> {
                                 artist: widget.artist,
                                 image: widget.image,
                                 audioPath: widget.audioPath,
-                                isPlaying: _isPlaying,
+                                isPlaying: isPlaying,
                                 position: _position,
                               ),
                             ),
@@ -364,7 +362,7 @@ class _MusicCardState extends State<MusicCard> {
                     IconButton(
                       onPressed: _togglePlay,
                       icon: Icon(
-                        _isPlaying ? Icons.pause_circle_filled : Icons.play_circle_fill,
+                        isPlaying ? Icons.pause_circle_filled : Icons.play_circle_fill,
                         color: Colors.white,
                         size: 32,
                       ),
