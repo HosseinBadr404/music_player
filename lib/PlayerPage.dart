@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:audioplayers/audioplayers.dart';
+import 'package:just_audio/just_audio.dart';
 
 class PlayerPage extends StatefulWidget {
   final AudioPlayer audioPlayer;
@@ -36,24 +36,24 @@ class _PlayerPageState extends State<PlayerPage> {
     _isPlaying = widget.isPlaying;
     _position = widget.position;
 
-    widget.audioPlayer.onPlayerStateChanged.listen((state) {
+    widget.audioPlayer.playingStream.listen((playing) {
       if (mounted) {
         setState(() {
-          _isPlaying = state == PlayerState.playing;
+          _isPlaying = playing;
         });
       }
     });
-    widget.audioPlayer.onPositionChanged.listen((position) {
+    widget.audioPlayer.positionStream.listen((position) {
       if (mounted) {
         setState(() {
           _position = position;
         });
       }
     });
-    widget.audioPlayer.onDurationChanged.listen((duration) {
+    widget.audioPlayer.durationStream.listen((duration) {
       if (mounted) {
         setState(() {
-          _duration = duration;
+          _duration = duration ?? Duration.zero;
         });
       }
     });
@@ -62,15 +62,9 @@ class _PlayerPageState extends State<PlayerPage> {
   Future<void> _togglePlayPause() async {
     if (_isPlaying) {
       await widget.audioPlayer.pause();
-      setState(() {
-        _isPlaying = false;
-      });
     } else {
       await widget.audioPlayer.seek(_position);
-      await widget.audioPlayer.resume();
-      setState(() {
-        _isPlaying = true;
-      });
+      await widget.audioPlayer.play();
     }
   }
 

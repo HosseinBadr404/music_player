@@ -1,12 +1,15 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:audioplayers/audioplayers.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import 'PlayerPage.dart';
 
-// یه پخش‌کننده مشترک برای همه صفحات
+// پخش‌کننده مشترک برای همه صفحات
 final AudioPlayer globalAudioPlayer = AudioPlayer();
-// برای اینکه بدونیم کدوم موزیک در حال پخش هست
+// برای ردیابی موزیک در حال پخش
 String? currentAudioPath;
 
 void main() {
@@ -35,8 +38,124 @@ class MusicApp extends StatelessWidget {
   }
 }
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  List<MusicCard> localMusics = [];
+  List<MusicCard> downloadedMusics = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _requestPermissionsAndLoadMusic();
+  }
+
+  Future<void> _requestPermissionsAndLoadMusic() async {
+    // درخواست مجوز دسترسی به فایل‌های صوتی
+    final permissionStatus = await Permission.audio.request();
+    if (permissionStatus.isGranted) {
+      print('Audio permission granted');
+      await _loadMusicFiles();
+    } else if (permissionStatus.isDenied) {
+      print('Audio permission denied');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Audio permission is required to load music')),
+      );
+    } else if (permissionStatus.isPermanentlyDenied) {
+      print('Audio permission permanently denied');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Audio permission is permanently denied. Please enable it in settings.'),
+          action: SnackBarAction(
+            label: 'Settings',
+            onPressed: () => openAppSettings(),
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _loadMusicFiles() async {
+    List<MusicCard> local = [];
+    List<MusicCard> downloaded = [];
+
+    try {
+      // مسیرهای استاندارد موزیک و دانلود
+      Directory? musicDir = Directory('/storage/emulated/0/Music/musics');
+      Directory? downloadDir = Directory('/storage/emulated/0/Download/dmusics');
+
+      // اگه مسیرهای استاندارد وجود نداشتن، از path_provider استفاده کن
+      if (!await musicDir.exists()) {
+        final externalDir = await getExternalStorageDirectory();
+        musicDir = Directory('${externalDir?.path ?? ''}/musics');
+        print('Fallback to external storage: ${musicDir.path}');
+      }
+      if (!await downloadDir.exists()) {
+        final dlDir = await getDownloadsDirectory();
+        downloadDir = Directory('${dlDir?.path ?? ''}/dmusics');
+        print('Fallback to download directory: ${downloadDir.path}');
+      }
+
+      // دیباگ: نمایش مسیرهای بررسی‌شده
+      print('Checking music directory: ${musicDir.path}');
+      print('Checking download directory: ${downloadDir.path}');
+
+      // لود موزیک‌های محلی
+      if (await musicDir.exists()) {
+        await for (var file in musicDir.list(recursive: false)) {
+          if (file is File && file.path.toLowerCase().endsWith('.mp3')) {
+            final fileName = file.path.split('/').last.replaceAll('.mp3', '');
+            local.add(MusicCard(
+              title: fileName,
+              artist: 'Unknown',
+              image: 'assets/images/c1.jpg',
+              audioPath: file.path,
+            ));
+          }
+        }
+        print('Found ${local.length} local music files');
+      } else {
+        print('Music directory does not exist: ${musicDir.path}');
+      }
+
+      // لود موزیک‌های دانلود‌شده
+      if (await downloadDir.exists()) {
+        await for (var file in downloadDir.list(recursive: false)) {
+          if (file is File && file.path.toLowerCase().endsWith('.mp3')) {
+            final fileName = file.path.split('/').last.replaceAll('.mp3', '');
+            downloaded.add(MusicCard(
+              title: fileName,
+              artist: 'Unknown',
+              image: 'assets/images/c1.jpg',
+              audioPath: file.path,
+            ));
+          }
+        }
+        print('Found ${downloaded.length} downloaded music files');
+      } else {
+        print('Download directory does not exist: ${downloadDir.path}');
+      }
+    } catch (e) {
+      print('Error loading music files: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading music: $e')),
+        );
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        localMusics = local;
+        downloadedMusics = downloaded;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -111,85 +230,11 @@ class HomePage extends StatelessWidget {
               SizedBox(height: 40),
               sectionTitle(context, "Local Musics"),
               SizedBox(height: 8),
-              musicList([
-                MusicCard(
-                  title: 'Giant',
-                  artist: 'Yuqi',
-                  image: 'assets/images/c1.jpg',
-                  audioPath: 'LMusics/m1.mp3',
-                ),
-                MusicCard(
-                  title: 'Remedy',
-                  artist: 'Annie',
-                  image: 'assets/images/c1.jpg',
-                  audioPath: 'LMusics/m2.mp3',
-                ),
-                MusicCard(
-                  title: 'Dream',
-                  artist: 'Lisa',
-                  image: 'assets/images/c1.jpg',
-                  audioPath: 'LMusics/m3.mp3',
-                ),
-                MusicCard(
-                  title: 'Sky',
-                  artist: 'John',
-                  image: 'assets/images/c1.jpg',
-                  audioPath: 'LMusics/m4.mp3',
-                ),
-                MusicCard(
-                  title: 'Moon',
-                  artist: 'Ella',
-                  image: 'assets/images/c1.jpg',
-                  audioPath: 'LMusics/m5.mp3',
-                ),
-                MusicCard(
-                  title: 'Star',
-                  artist: 'Mike',
-                  image: 'assets/images/c1.jpg',
-                  audioPath: 'LMusics/m6.mp3',
-                ),
-              ]),
+              musicList(localMusics),
               SizedBox(height: 24),
               sectionTitle(context, "Downloaded Musics"),
               SizedBox(height: 8),
-              musicList([
-                MusicCard(
-                  title: 'Faith',
-                  artist: 'Nurko',
-                  image: 'assets/images/c1.jpg',
-                  audioPath: 'LMusics/m7.mp3',
-                ),
-                MusicCard(
-                  title: 'Remedy',
-                  artist: 'Annie',
-                  image: 'assets/images/c1.jpg',
-                  audioPath: 'LMusics/m8.mp3',
-                ),
-                MusicCard(
-                  title: 'Light',
-                  artist: 'Sara',
-                  image: 'assets/images/c1.jpg',
-                  audioPath: 'LMusics/m9.mp3',
-                ),
-                MusicCard(
-                  title: 'Echo',
-                  artist: 'Tom',
-                  image: 'assets/images/c1.jpg',
-                  audioPath: 'LMusics/m10.mp3',
-                ),
-                MusicCard(
-                  title: 'Wave',
-                  artist: 'Luna',
-                  image: 'assets/images/c1.jpg',
-                  audioPath: 'LMusics/m11.mp3',
-                ),
-                MusicCard(
-                  title: 'Glow',
-                  artist: 'Alex',
-                  image: 'assets/images/c1.jpg',
-                  audioPath: 'LMusics/m12.mp3',
-                ),
-              ]),
+              musicList(downloadedMusics),
             ],
           ),
         ),
@@ -210,7 +255,9 @@ class HomePage extends StatelessWidget {
   Widget musicList(List<MusicCard> cards) {
     return SizedBox(
       height: 255,
-      child: ListView.separated(
+      child: cards.isEmpty
+          ? Center(child: Text('No music found', style: TextStyle(color: Colors.grey)))
+          : ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: cards.length,
         separatorBuilder: (context, index) => SizedBox(width: 14),
@@ -219,9 +266,6 @@ class HomePage extends StatelessWidget {
     );
   }
 }
-
-
-
 
 class MusicCard extends StatefulWidget {
   final String title;
@@ -247,8 +291,7 @@ class _MusicCardState extends State<MusicCard> {
   @override
   void initState() {
     super.initState();
-    // فقط به موقعیت موزیک گوش می‌دیم، نه وضعیت پخش
-    globalAudioPlayer.onPositionChanged.listen((position) {
+    globalAudioPlayer.positionStream.listen((position) {
       if (mounted) {
         setState(() {
           _position = position;
@@ -258,24 +301,31 @@ class _MusicCardState extends State<MusicCard> {
   }
 
   Future<void> _togglePlay() async {
-    // اگه این موزیک در حال پخش باشه، متوقفش کن
-    if (currentAudioPath == widget.audioPath && (await globalAudioPlayer.state == PlayerState.playing)) {
-      await globalAudioPlayer.pause();
-    } else {
-      // اگه موزیک دیگه‌ای در حال پخش باشه، متوقفش کن
-      await globalAudioPlayer.stop();
-      // موزیک جدید رو پخش کن
-      currentAudioPath = widget.audioPath;
-      await globalAudioPlayer.play(AssetSource(widget.audioPath));
+    try {
+      if (currentAudioPath == widget.audioPath && globalAudioPlayer.playing) {
+        await globalAudioPlayer.pause();
+      } else {
+        await globalAudioPlayer.stop();
+        currentAudioPath = widget.audioPath;
+        await globalAudioPlayer.setFilePath(widget.audioPath);
+        await globalAudioPlayer.play();
+      }
+      if (mounted) {
+        setState(() {});
+      }
+    } catch (e) {
+      print('Error playing music: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error playing music: $e')),
+        );
+      }
     }
-    // به‌روزرسانی UI
-    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    // بررسی وضعیت پخش: اگه این موزیک در حال پخش باشه، دکمه "Pause" نشون بده
-    bool isPlaying = currentAudioPath == widget.audioPath && globalAudioPlayer.state == PlayerState.playing;
+    bool isPlaying = currentAudioPath == widget.audioPath && globalAudioPlayer.playing;
 
     return SizedBox(
       width: 180,
