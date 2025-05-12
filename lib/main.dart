@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
 
 import 'PlayerPage.dart';
 import 'MusicShopPage.dart';
@@ -15,8 +16,24 @@ final AudioPlayer globalAudioPlayer = AudioPlayer();
 // برای ردیابی موزیک در حال پخش
 String? currentAudioPath;
 
+// Theme provider
+class ThemeProvider with ChangeNotifier {
+  bool _isDarkTheme = true;
+  bool get isDarkTheme => _isDarkTheme;
+
+  void toggleTheme() {
+    _isDarkTheme = !_isDarkTheme;
+    notifyListeners();
+  }
+}
+
 void main() {
-  runApp(const MusicApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
+      child: const MusicApp(),
+    ),
+  );
 }
 
 class MusicApp extends StatelessWidget {
@@ -24,6 +41,7 @@ class MusicApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return MaterialApp(
       initialRoute: '/',
       routes: {
@@ -33,9 +51,20 @@ class MusicApp extends StatelessWidget {
         '/signup': (context) => const SignupPage(),
       },
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark().copyWith(
+      theme: themeProvider.isDarkTheme
+          ? ThemeData.dark().copyWith(
         textTheme: GoogleFonts.balooBhaijaan2TextTheme(
           ThemeData.dark().textTheme.copyWith(
+            bodySmall: TextStyle(fontSize: 15, fontWeight: FontWeight.w400),
+            bodyMedium: TextStyle(fontWeight: FontWeight.w600),
+            bodyLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+            titleLarge: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+          ),
+        ),
+      )
+          : ThemeData.light().copyWith(
+        textTheme: GoogleFonts.balooBhaijaan2TextTheme(
+          ThemeData.light().textTheme.copyWith(
             bodySmall: TextStyle(fontSize: 15, fontWeight: FontWeight.w400),
             bodyMedium: TextStyle(fontWeight: FontWeight.w600),
             bodyLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
@@ -47,6 +76,7 @@ class MusicApp extends StatelessWidget {
   }
 }
 
+// ... (rest of your main.dart remains unchanged)
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
