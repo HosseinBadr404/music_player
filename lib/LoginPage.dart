@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'MusicShopPage.dart'; // Import to access globalIsLoggedIn
 
-class SignupPage extends StatelessWidget {
-  const SignupPage({super.key});
+class LoginPage extends StatelessWidget {
+  const LoginPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +15,7 @@ class SignupPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'Signup',
+                'Login',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               SizedBox(height: 20),
@@ -43,27 +43,14 @@ class SignupPage extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(height: 10),
-              TextField(
-                obscureText: true,
-                decoration: InputDecoration(
-                  hintText: 'Confirm Password',
-                  filled: true,
-                  fillColor: Colors.grey.shade900,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
-                  // Mock signup: Set global login state
+                  // Mock login: Set global login state
                   globalIsLoggedIn = true;
                   Navigator.pushReplacementNamed(context, '/music_shop');
                 },
-                child: Text('Signup'),
+                child: Text('Login'),
               ),
             ],
           ),

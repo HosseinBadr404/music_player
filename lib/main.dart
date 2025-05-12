@@ -1,19 +1,39 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
 
 import 'PlayerPage.dart';
-import 'SignIn.dart';
-import 'ShowAllPage.dart';
+import 'MusicShopPage.dart';
+import 'LoginPage.dart';
+import 'SignupPage.dart';
 
 // پخش‌کننده مشترک برای همه صفحات
 final AudioPlayer globalAudioPlayer = AudioPlayer();
+// برای ردیابی موزیک در حال پخش
 String? currentAudioPath;
 
+// Theme provider
+class ThemeProvider with ChangeNotifier {
+  bool _isDarkTheme = true;
+  bool get isDarkTheme => _isDarkTheme;
+
+  void toggleTheme() {
+    _isDarkTheme = !_isDarkTheme;
+    notifyListeners();
+  }
+}
+
 void main() {
-  runApp(const MusicApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
+      child: const MusicApp(),
+    ),
+  );
 }
 
 class MusicApp extends StatelessWidget {
@@ -21,25 +41,34 @@ class MusicApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return MaterialApp(
-      home: const HomePage(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const HomePage(),
+        '/music_shop': (context) => const MusicShopPage(),
+        '/login': (context) => const LoginPage(),
+        '/signup': (context) => const SignupPage(),
+      },
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark().copyWith(
-        textTheme: ThemeData.dark().textTheme.copyWith(
-          bodySmall: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w400,
-            fontFamily: 'Poppins',
+      theme: themeProvider.isDarkTheme
+          ? ThemeData.dark().copyWith(
+        textTheme: GoogleFonts.balooBhaijaan2TextTheme(
+          ThemeData.dark().textTheme.copyWith(
+            bodySmall: TextStyle(fontSize: 15, fontWeight: FontWeight.w400),
+            bodyMedium: TextStyle(fontWeight: FontWeight.w600),
+            bodyLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+            titleLarge: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
           ),
-          bodyLarge: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            fontFamily: 'Lora',
-          ),
-          titleLarge: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w700,
-            fontFamily: 'Lora',
+        ),
+      )
+          : ThemeData.light().copyWith(
+        textTheme: GoogleFonts.balooBhaijaan2TextTheme(
+          ThemeData.light().textTheme.copyWith(
+            bodySmall: TextStyle(fontSize: 15, fontWeight: FontWeight.w400),
+            bodyMedium: TextStyle(fontWeight: FontWeight.w600),
+            bodyLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+            titleLarge: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
           ),
         ),
       ),
@@ -47,6 +76,7 @@ class MusicApp extends StatelessWidget {
   }
 }
 
+// ... (rest of your main.dart remains unchanged)
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -57,6 +87,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   List<MusicCard> localMusics = [];
   List<MusicCard> downloadedMusics = [];
+  int _selectedIndex = 0;
 
   @override
   void initState() {
@@ -67,15 +98,18 @@ class _HomePageState extends State<HomePage> {
   Future<void> _requestPermissionsAndLoadMusic() async {
     final permissionStatus = await Permission.audio.request();
     if (permissionStatus.isGranted) {
-      _loadMusicFiles();
+      print('Audio permission granted');
+      await _loadMusicFiles();
     } else if (permissionStatus.isDenied) {
+      print('Audio permission denied');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Audio permission is required')),
+        SnackBar(content: Text('Audio permission is required to load music')),
       );
     } else if (permissionStatus.isPermanentlyDenied) {
+      print('Audio permission permanently denied');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Please enable audio permission in settings.'),
+          content: Text('Audio permission is permanently denied. Please enable it in settings.'),
           action: SnackBarAction(
             label: 'Settings',
             onPressed: () => openAppSettings(),
@@ -89,50 +123,83 @@ class _HomePageState extends State<HomePage> {
     List<MusicCard> local = [];
     List<MusicCard> downloaded = [];
 
-    Directory musicDir = Directory('/storage/emulated/0/Music/musics');
-    Directory downloadDir = Directory('/storage/emulated/0/Download/dmusics');
+    try {
+      Directory? musicDir = Directory('/storage/emulated/0/Music/musics');
+      Directory? downloadDir = Directory('/storage/emulated/0/Download/dmusics');
 
-    if (!await musicDir.exists()) {
-      final externalDir = await getExternalStorageDirectory();
-      musicDir = Directory('${externalDir?.path ?? ''}/musics');
-    }
-    if (!await downloadDir.exists()) {
-      final dlDir = await getDownloadsDirectory();
-      downloadDir = Directory('${dlDir?.path ?? ''}/dmusics');
-    }
+      if (!await musicDir.exists()) {
+        final externalDir = await getExternalStorageDirectory();
+        musicDir = Directory('${externalDir?.path ?? ''}/musics');
+        print('Fallback to external storage: ${musicDir.path}');
+      }
+      if (!await downloadDir.exists()) {
+        final dlDir = await getDownloadsDirectory();
+        downloadDir = Directory('${dlDir?.path ?? ''}/dmusics');
+        print('Fallback to download directory: ${downloadDir.path}');
+      }
 
-    if (await musicDir.exists()) {
-      await for (var file in musicDir.list(recursive: false)) {
-        if (file is File && file.path.toLowerCase().endsWith('.mp3')) {
-          final fileName = file.path.split('/').last.replaceAll('.mp3', '');
-          local.add(MusicCard(
-            title: fileName,
-            artist: 'Unknown',
-            image: 'assets/images/c1.jpg',
-            audioPath: file.path,
-          ));
+      print('Checking music directory: ${musicDir.path}');
+      print('Checking download directory: ${downloadDir.path}');
+
+      if (await musicDir.exists()) {
+        await for (var file in musicDir.list(recursive: false)) {
+          if (file is File && file.path.toLowerCase().endsWith('.mp3')) {
+            final fileName = file.path.split('/').last.replaceAll('.mp3', '');
+            local.add(MusicCard(
+              title: fileName,
+              artist: 'Unknown',
+              image: 'assets/images/c1.jpg',
+              audioPath: file.path,
+            ));
+          }
         }
+        print('Found ${local.length} local music files');
+      } else {
+        print('Music directory does not exist: ${musicDir.path}');
+      }
+
+      if (await downloadDir.exists()) {
+        await for (var file in downloadDir.list(recursive: false)) {
+          if (file is File && file.path.toLowerCase().endsWith('.mp3')) {
+            final fileName = file.path.split('/').last.replaceAll('.mp3', '');
+            downloaded.add(MusicCard(
+              title: fileName,
+              artist: 'Unknown',
+              image: 'assets/images/c1.jpg',
+              audioPath: file.path,
+            ));
+          }
+        }
+        print('Found ${downloaded.length} downloaded music files');
+      } else {
+        print('Download directory does not exist: ${downloadDir.path}');
+      }
+    } catch (e) {
+      print('Error loading music files: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading music: $e')),
+        );
       }
     }
 
-    if (await downloadDir.exists()) {
-      await for (var file in downloadDir.list(recursive: false)) {
-        if (file is File && file.path.toLowerCase().endsWith('.mp3')) {
-          final fileName = file.path.split('/').last.replaceAll('.mp3', '');
-          downloaded.add(MusicCard(
-            title: fileName,
-            artist: 'Unknown',
-            image: 'assets/images/c1.jpg',
-            audioPath: file.path,
-          ));
-        }
-      }
+    if (mounted) {
+      setState(() {
+        localMusics = local;
+        downloadedMusics = downloaded;
+      });
     }
+  }
 
+  void _onItemTapped(int index) {
     setState(() {
-      localMusics = local;
-      downloadedMusics = downloaded;
+      _selectedIndex = index;
     });
+    if (index == 0) {
+      Navigator.pushNamed(context, '/');
+    } else if (index == 1) {
+      Navigator.pushNamed(context, '/music_shop');
+    }
   }
 
   @override
@@ -153,11 +220,8 @@ class _HomePageState extends State<HomePage> {
               iconSize: 28,
               selectedFontSize: 16,
               unselectedFontSize: 16,
-              onTap: (index) {
-                if (index == 1) {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => SignIn()));
-                }
-              },
+              currentIndex: _selectedIndex,
+              onTap: _onItemTapped,
               items: [
                 BottomNavigationBarItem(
                   label: 'Home',
@@ -193,29 +257,14 @@ class _HomePageState extends State<HomePage> {
           child: ListView(
             children: [
               Center(
-                child: Text(
-                  "Home",
-                  style: TextStyle(
-                    fontFamily: 'Lora',
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
+                child: Text("Home", style: Theme.of(context).textTheme.titleLarge),
               ),
               SizedBox(height: 12),
               TextField(
-                style: TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'Poppins',
-                ),
+                style: TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   hintText: 'type a music name ...',
-                  hintStyle: TextStyle(
-                    color: Colors.grey,
-                    fontFamily: 'Poppins',
-                    fontSize: 17,
-                  ),
+                  hintStyle: TextStyle(color: Colors.grey),
                   prefixIcon: Icon(Icons.search, color: Colors.white),
                   filled: true,
                   fillColor: Colors.grey.shade900,
@@ -225,104 +274,41 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
-              SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Local Musics",
-                    style: TextStyle(
-                      fontFamily: 'Lora',
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ShowAllPage(
-                            title: "Show All Local Musics",
-                            isLocal: true,
-                          ),
-                        ),
-                      );
-                    },
-                    child: Text(
-                      "Show All",
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-
-                ],
-              ),
+              SizedBox(height: 40),
+              sectionTitle(context, "Local Musics"),
               SizedBox(height: 8),
-              SizedBox(
-                height: 255,
-                child: localMusics.isEmpty
-                    ? Center(
-                  child: Text(
-                    'No music found',
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontFamily: 'Poppins',
-                    ),
-                  ),
-                )
-                    : ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: localMusics.length,
-                  separatorBuilder: (context, index) => SizedBox(width: 14),
-                  itemBuilder: (context, index) => localMusics[index],
-                ),
-              ),
+              musicList(localMusics),
               SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Downloaded Musics",
-                    style: TextStyle(
-                      fontFamily: 'Lora',
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  Text(
-                    "show all",
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontFamily: 'Poppins',
-                    ),
-                  ),
-                ],
-              ),
+              sectionTitle(context, "Downloaded Musics"),
               SizedBox(height: 8),
-              SizedBox(
-                height: 255,
-                child: downloadedMusics.isEmpty
-                    ? Center(
-                  child: Text(
-                    'No music found',
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontFamily: 'Poppins',
-                    ),
-                  ),
-                )
-                    : ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: downloadedMusics.length,
-                  separatorBuilder: (context, index) => SizedBox(width: 14),
-                  itemBuilder: (context, index) => downloadedMusics[index],
-                ),
-              ),
+              musicList(downloadedMusics),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget sectionTitle(BuildContext context, String title) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(title, style: Theme.of(context).textTheme.bodyLarge),
+        Text("show all", style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)),
+      ],
+    );
+  }
+
+  Widget musicList(List<MusicCard> cards) {
+    return SizedBox(
+      height: 255,
+      child: cards.isEmpty
+          ? Center(child: Text('No music found', style: TextStyle(color: Colors.grey)))
+          : ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: cards.length,
+        separatorBuilder: (context, index) => SizedBox(width: 14),
+        itemBuilder: (context, index) => cards[index],
       ),
     );
   }
@@ -353,9 +339,11 @@ class _MusicCardState extends State<MusicCard> {
   void initState() {
     super.initState();
     globalAudioPlayer.positionStream.listen((position) {
-      setState(() {
-        _position = position;
-      });
+      if (mounted) {
+        setState(() {
+          _position = position;
+        });
+      }
     });
   }
 
@@ -369,11 +357,16 @@ class _MusicCardState extends State<MusicCard> {
         await globalAudioPlayer.setFilePath(widget.audioPath);
         await globalAudioPlayer.play();
       }
-      setState(() {});
+      if (mounted) {
+        setState(() {});
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error playing music')),
-      );
+      print('Error playing music: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error playing music: $e')),
+        );
+      }
     }
   }
 
@@ -448,23 +441,14 @@ class _MusicCardState extends State<MusicCard> {
                           children: [
                             Text(
                               widget.title,
-                              style: TextStyle(
-                                fontFamily: 'Lora',
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
+                              style: Theme.of(context).textTheme.bodyLarge,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                             SizedBox(height: 4),
                             Text(
                               widget.artist,
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 14,
-                                color: Colors.grey,
-                              ),
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
