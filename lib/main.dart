@@ -6,6 +6,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import 'PlayerPage.dart';
+import 'MusicShopPage.dart';
+import 'LoginPage.dart';
+import 'SignupPage.dart';
 
 // پخش‌کننده مشترک برای همه صفحات
 final AudioPlayer globalAudioPlayer = AudioPlayer();
@@ -22,7 +25,13 @@ class MusicApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: const HomePage(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const HomePage(),
+        '/music_shop': (context) => const MusicShopPage(),
+        '/login': (context) => const LoginPage(),
+        '/signup': (context) => const SignupPage(),
+      },
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(
         textTheme: GoogleFonts.balooBhaijaan2TextTheme(
@@ -48,6 +57,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   List<MusicCard> localMusics = [];
   List<MusicCard> downloadedMusics = [];
+  int _selectedIndex = 0;
 
   @override
   void initState() {
@@ -56,7 +66,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _requestPermissionsAndLoadMusic() async {
-    // درخواست مجوز دسترسی به فایل‌های صوتی
     final permissionStatus = await Permission.audio.request();
     if (permissionStatus.isGranted) {
       print('Audio permission granted');
@@ -85,11 +94,9 @@ class _HomePageState extends State<HomePage> {
     List<MusicCard> downloaded = [];
 
     try {
-      // مسیرهای استاندارد موزیک و دانلود
       Directory? musicDir = Directory('/storage/emulated/0/Music/musics');
       Directory? downloadDir = Directory('/storage/emulated/0/Download/dmusics');
 
-      // اگه مسیرهای استاندارد وجود نداشتن، از path_provider استفاده کن
       if (!await musicDir.exists()) {
         final externalDir = await getExternalStorageDirectory();
         musicDir = Directory('${externalDir?.path ?? ''}/musics');
@@ -101,11 +108,9 @@ class _HomePageState extends State<HomePage> {
         print('Fallback to download directory: ${downloadDir.path}');
       }
 
-      // دیباگ: نمایش مسیرهای بررسی‌شده
       print('Checking music directory: ${musicDir.path}');
       print('Checking download directory: ${downloadDir.path}');
 
-      // لود موزیک‌های محلی
       if (await musicDir.exists()) {
         await for (var file in musicDir.list(recursive: false)) {
           if (file is File && file.path.toLowerCase().endsWith('.mp3')) {
@@ -123,7 +128,6 @@ class _HomePageState extends State<HomePage> {
         print('Music directory does not exist: ${musicDir.path}');
       }
 
-      // لود موزیک‌های دانلود‌شده
       if (await downloadDir.exists()) {
         await for (var file in downloadDir.list(recursive: false)) {
           if (file is File && file.path.toLowerCase().endsWith('.mp3')) {
@@ -157,6 +161,17 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+    if (index == 0) {
+      Navigator.pushNamed(context, '/');
+    } else if (index == 1) {
+      Navigator.pushNamed(context, '/music_shop');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -175,6 +190,8 @@ class _HomePageState extends State<HomePage> {
               iconSize: 28,
               selectedFontSize: 16,
               unselectedFontSize: 16,
+              currentIndex: _selectedIndex,
+              onTap: _onItemTapped,
               items: [
                 BottomNavigationBarItem(
                   label: 'Home',
