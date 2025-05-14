@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'SignUp.dart';
+import 'fake_user_data.dart';
 
 class SignIn extends StatefulWidget {
   const SignIn({super.key});
@@ -13,15 +14,34 @@ class _SignInState extends State<SignIn> {
   final passwordController = TextEditingController();
   bool isObscure = true;
   String? emailError;
+  String? loginError;
 
   final emailRegex = RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$");
 
   void validateAndSignIn() {
     final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    setState(() {
+      emailError = null;
+      loginError = null;
+    });
+
     if (!emailRegex.hasMatch(email)) {
-      setState(() => emailError = "email is not validate");
+      setState(() => emailError = "Email is not valid");
+      return;
+    }
+
+    if (password.isEmpty) {
+      setState(() => loginError = "Password cannot be empty");
+      return;
+    }
+
+    final success = FakeUserData.login(email, password);
+    if (success) {
+      Navigator.pushNamedAndRemoveUntil(context, '/music_shop', (route) => false);
     } else {
-      setState(() => emailError = null);
+      setState(() => loginError = "Email or password is incorrect");
     }
   }
 
@@ -92,7 +112,7 @@ class _SignInState extends State<SignIn> {
                                 fontSize: 16,
                                 fontWeight: FontWeight.w400,
                               ),
-                              hintText: 'type your email here ...',
+                              hintText: 'Type your email here ...',
                               hintStyle: const TextStyle(
                                 color: Colors.grey,
                                 fontFamily: 'Montserrat',
@@ -127,7 +147,7 @@ class _SignInState extends State<SignIn> {
                                 fontSize: 16,
                                 fontWeight: FontWeight.w400,
                               ),
-                              hintText: 'type your password here ...',
+                              hintText: 'Type your password here ...',
                               hintStyle: const TextStyle(
                                 color: Colors.grey,
                                 fontFamily: 'Montserrat',
@@ -153,6 +173,13 @@ class _SignInState extends State<SignIn> {
                               ),
                             ),
                           ),
+                          if (loginError != null) ...[
+                            const SizedBox(height: 10),
+                            Text(
+                              loginError!,
+                              style: const TextStyle(color: Colors.red, fontSize: 14),
+                            ),
+                          ],
                           const SizedBox(height: 30),
                           ElevatedButton(
                             onPressed: validateAndSignIn,
@@ -164,7 +191,7 @@ class _SignInState extends State<SignIn> {
                               minimumSize: const Size(double.infinity, 50),
                             ),
                             child: Text(
-                              'sign in',
+                              'Sign in',
                               style: const TextStyle(
                                 fontFamily: 'PlayfairDisplay',
                                 fontWeight: FontWeight.bold,
@@ -183,7 +210,7 @@ class _SignInState extends State<SignIn> {
                                   );
                                 },
                                 child: const Text(
-                                  'sign up',
+                                  'Sign up',
                                   style: TextStyle(
                                     color: Colors.grey,
                                     fontFamily: 'Montserrat',

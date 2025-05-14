@@ -30,7 +30,7 @@ class MusicApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => const HomePage(),
-        //'/music_shop': (context) => const MusicShopPage(),
+        '/music_shop': (context) => const MusicShopPage(),
         '/signin': (context) => const SignIn(),
         '/signup': (context) => const SignUp(),
       },

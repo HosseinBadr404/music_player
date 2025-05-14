@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'SignIn.dart';
+import 'fake_user_data.dart';
+
 class SignUp extends StatefulWidget {
   const SignUp({super.key});
 
@@ -13,15 +15,40 @@ class _SignUpState extends State<SignUp> {
   final passwordController = TextEditingController();
   bool isObscure = true;
   String? emailError;
+  String? signupError;
 
   final emailRegex = RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$");
 
   void validateAndSignUp() {
+    final username = usernameController.text.trim();
     final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    setState(() {
+      emailError = null;
+      signupError = null;
+    });
+
+    if (username.isEmpty) {
+      setState(() => signupError = "Username cannot be empty");
+      return;
+    }
+
     if (!emailRegex.hasMatch(email)) {
-      setState(() => emailError = "email is not validate");
+      setState(() => emailError = "Email is not valid");
+      return;
+    }
+
+    if (password.isEmpty) {
+      setState(() => signupError = "Password cannot be empty");
+      return;
+    }
+
+    final success = FakeUserData.signUp(username, email, password);
+    if (success) {
+      Navigator.pushNamedAndRemoveUntil(context, '/music_shop', (route) => false);
     } else {
-      setState(() => emailError = null);
+      setState(() => signupError = "Email already registered");
     }
   }
 
@@ -92,7 +119,7 @@ class _SignUpState extends State<SignUp> {
                                 fontSize: 16,
                                 fontWeight: FontWeight.w400,
                               ),
-                              hintText: 'type your username here ...',
+                              hintText: 'Type your username here ...',
                               hintStyle: const TextStyle(
                                 color: Colors.grey,
                                 fontFamily: 'Montserrat',
@@ -125,7 +152,7 @@ class _SignUpState extends State<SignUp> {
                                 fontSize: 16,
                                 fontWeight: FontWeight.w400,
                               ),
-                              hintText: 'type your email here ...',
+                              hintText: 'Type your email here ...',
                               hintStyle: const TextStyle(
                                 color: Colors.grey,
                                 fontFamily: 'Montserrat',
@@ -160,7 +187,7 @@ class _SignUpState extends State<SignUp> {
                                 fontSize: 16,
                                 fontWeight: FontWeight.w400,
                               ),
-                              hintText: 'type your password here ...',
+                              hintText: 'Type your password here ...',
                               hintStyle: const TextStyle(
                                 color: Colors.grey,
                                 fontFamily: 'Montserrat',
@@ -186,6 +213,13 @@ class _SignUpState extends State<SignUp> {
                               ),
                             ),
                           ),
+                          if (signupError != null) ...[
+                            const SizedBox(height: 10),
+                            Text(
+                              signupError!,
+                              style: const TextStyle(color: Colors.red, fontSize: 14),
+                            ),
+                          ],
                           const SizedBox(height: 30),
                           ElevatedButton(
                             onPressed: validateAndSignUp,
@@ -197,7 +231,7 @@ class _SignUpState extends State<SignUp> {
                               minimumSize: const Size(double.infinity, 50),
                             ),
                             child: Text(
-                              'sign up',
+                              'Sign up',
                               style: const TextStyle(
                                 fontFamily: 'PlayfairDisplay',
                                 fontWeight: FontWeight.bold,
@@ -216,7 +250,7 @@ class _SignUpState extends State<SignUp> {
                                   );
                                 },
                                 child: const Text(
-                                  'sign in',
+                                  'Sign in',
                                   style: TextStyle(
                                     color: Colors.grey,
                                     fontFamily: 'Montserrat',
