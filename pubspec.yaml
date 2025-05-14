@@ -66,6 +66,7 @@ flutter:
   assets:
     - assets/images/
     - assets/LMusics/m1.mp3
+    - assets/images/c1.jpg
 
   fonts:
     - family: BalooBhaijaan
