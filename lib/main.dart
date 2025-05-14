@@ -7,7 +7,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
 import 'PlayerPage.dart';
-//import 'MusicShopPage.dart';
+import 'MusicShopPage.dart';
 import 'SignIn.dart';
 import 'SignUp.dart';
 import 'ShowAllPage.dart';
@@ -172,7 +172,7 @@ class _HomePageState extends State<HomePage> {
                 unselectedFontSize: 16,
                 onTap: (index) {
                   if (index == 1) {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => SignIn()));
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => MusicShopPage()));
                   }
                 },
                 items: [

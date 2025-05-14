@@ -3,9 +3,6 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'MusicShopListPage.dart';
 import 'AccountPage.dart';
 
-// Global variable to track login state (for simplicity)
-bool globalIsLoggedIn = false;
-
 class MusicShopPage extends StatefulWidget {
   const MusicShopPage({super.key});
 
@@ -86,35 +83,9 @@ class _MusicShopPageState extends State<MusicShopPage> {
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: globalIsLoggedIn ? _buildShopContent() : _buildAuthOptions(),
+          child: _buildShopContent(), // Directly show shop content
         ),
       ),
-    );
-  }
-
-  Widget _buildAuthOptions() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          'Welcome to Music Shop',
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
-        SizedBox(height: 20),
-        ElevatedButton(
-          onPressed: () {
-            Navigator.pushNamed(context, '/login');
-          },
-          child: Text('Login'),
-        ),
-        SizedBox(height: 10),
-        ElevatedButton(
-          onPressed: () {
-            Navigator.pushNamed(context, '/signup');
-          },
-          child: Text('Signup'),
-        ),
-      ],
     );
   }
 

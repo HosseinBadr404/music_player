@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'MusicShopPage.dart'; // For globalIsLoggedIn
 import 'AccountPage.dart'; // For accessing user data (mock)
 
 // Mock WebSocket simulation
@@ -111,8 +110,7 @@ class _PaymentPageState extends State<PaymentPage> {
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: globalIsLoggedIn
-              ? Column(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
@@ -169,12 +167,6 @@ class _PaymentPageState extends State<PaymentPage> {
                 ),
               ),
             ],
-          )
-              : Center(
-            child: Text(
-              'Please log in to make a payment',
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
           ),
         ),
       ),

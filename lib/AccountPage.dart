@@ -225,7 +225,7 @@ class _AccountPageState extends State<AccountPage> {
           ),
           TextButton(
             onPressed: () {
-              globalIsLoggedIn = false;
+              //globalIsLoggedIn = false;
               Navigator.pushReplacementNamed(context, '/music_shop');
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('Account deleted')),
@@ -397,7 +397,7 @@ class _AccountPageState extends State<AccountPage> {
               // Logout Button
               ElevatedButton(
                 onPressed: () {
-                  globalIsLoggedIn = false;
+                  //globalIsLoggedIn = false;
                   Navigator.pushReplacementNamed(context, '/music_shop');
                 },
                 child: Text('Logout'),
