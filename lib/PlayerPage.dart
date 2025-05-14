@@ -9,6 +9,8 @@ class PlayerPage extends StatefulWidget {
   final String audioPath;
   final bool isPlaying;
   final Duration position;
+  final List<Map<String, String>>? playlist;
+  final int currentIndex;
 
   const PlayerPage({
     super.key,
@@ -19,6 +21,8 @@ class PlayerPage extends StatefulWidget {
     required this.audioPath,
     required this.isPlaying,
     required this.position,
+    this.playlist,
+    this.currentIndex = 0,
   });
 
   @override
@@ -57,6 +61,29 @@ class _PlayerPageState extends State<PlayerPage> {
         });
       }
     });
+    // گوش دادن به اتمام آهنگ
+    widget.audioPlayer.processingStateStream.listen((state) {
+      if (state == ProcessingState.completed && mounted) {
+        _playNext();
+      }
+    });
+
+    // تنظیم آهنگ اولیه
+    _initializeAudio();
+  }
+
+  Future<void> _initializeAudio() async {
+    if (widget.audioPath.isNotEmpty) {
+      try {
+        await widget.audioPlayer.setFilePath(widget.audioPath);
+        await widget.audioPlayer.seek(widget.position);
+        if (widget.isPlaying) {
+          await widget.audioPlayer.play();
+        }
+      } catch (e) {
+        print('Error initializing audio: $e');
+      }
+    }
   }
 
   Future<void> _togglePlayPause() async {
@@ -66,6 +93,64 @@ class _PlayerPageState extends State<PlayerPage> {
       await widget.audioPlayer.seek(_position);
       await widget.audioPlayer.play();
     }
+  }
+
+  Future<void> _seekTo(double value) async {
+    final newPosition = Duration(seconds: value.toInt());
+    await widget.audioPlayer.seek(newPosition);
+  }
+
+  Future<void> _playPrevious() async {
+    if (widget.playlist == null || widget.currentIndex <= 0) return;
+    final prevIndex = widget.currentIndex - 1;
+    final prevTrack = widget.playlist![prevIndex];
+    await widget.audioPlayer.stop();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PlayerPage(
+          audioPlayer: widget.audioPlayer,
+          title: prevTrack['title']!,
+          artist: prevTrack['artist']!,
+          image: prevTrack['image']!,
+          audioPath: prevTrack['audioPath']!,
+          isPlaying: true,
+          position: Duration.zero,
+          playlist: widget.playlist,
+          currentIndex: prevIndex,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _playNext() async {
+    if (widget.playlist == null || widget.currentIndex >= widget.playlist!.length - 1) {
+      await widget.audioPlayer.stop();
+      setState(() {
+        _isPlaying = false;
+        _position = Duration.zero;
+      });
+      return;
+    }
+    final nextIndex = widget.currentIndex + 1;
+    final nextTrack = widget.playlist![nextIndex];
+    await widget.audioPlayer.stop();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PlayerPage(
+          audioPlayer: widget.audioPlayer,
+          title: nextTrack['title']!,
+          artist: nextTrack['artist']!,
+          image: nextTrack['image']!,
+          audioPath: nextTrack['audioPath']!,
+          isPlaying: true,
+          position: Duration.zero,
+          playlist: widget.playlist,
+          currentIndex: nextIndex,
+        ),
+      ),
+    );
   }
 
   @override
@@ -86,35 +171,62 @@ class _PlayerPageState extends State<PlayerPage> {
               child: Image.asset(
                 widget.image,
                 width: double.infinity,
-                height: 250,
+                height: 370,
                 fit: BoxFit.cover,
               ),
             ),
-            SizedBox(height: 30),
+            SizedBox(height: 35),
             Text(
               widget.title,
               style: Theme.of(context).textTheme.titleLarge,
             ),
+            SizedBox(height: 15),
             Text(
               widget.artist,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey),
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 25),
             Text(
               "${_position.inMinutes}:${(_position.inSeconds % 60).toString().padLeft(2, '0')} / "
                   "${_duration.inMinutes}:${(_duration.inSeconds % 60).toString().padLeft(2, '0')}",
               style: TextStyle(color: Colors.white),
             ),
-            Spacer(),
-            IconButton(
-              icon: Icon(
-                _isPlaying ? Icons.pause_circle_filled : Icons.play_circle_fill,
-                size: 80,
-                color: Colors.white,
-              ),
-              onPressed: _togglePlayPause,
+            SizedBox(height: 20),
+            Slider(
+              value: _position.inSeconds.toDouble(),
+              max: _duration.inSeconds.toDouble() > 0 ? _duration.inSeconds.toDouble() : 1.0,
+              onChanged: (value) => _seekTo(value),
+              activeColor: Colors.white,
+              inactiveColor: Colors.grey,
             ),
-            SizedBox(height: 30),
+            Spacer(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  icon: Icon(Icons.skip_previous, size: 40, color: Colors.white),
+                  onPressed: widget.currentIndex > 0 ? _playPrevious : null,
+                ),
+                SizedBox(width: 20),
+                IconButton(
+                  icon: Icon(
+                    _isPlaying ? Icons.pause_circle_filled : Icons.play_circle_fill,
+                    size: 80,
+                    color: Colors.white,
+                  ),
+                  onPressed: _togglePlayPause,
+                ),
+                SizedBox(width: 20),
+                IconButton(
+                  icon: Icon(Icons.skip_next, size: 40, color: Colors.white),
+                  onPressed: widget.playlist != null &&
+                      widget.currentIndex < widget.playlist!.length - 1
+                      ? _playNext
+                      : null,
+                ),
+              ],
+            ),
+            SizedBox(height: 80),
           ],
         ),
       ),

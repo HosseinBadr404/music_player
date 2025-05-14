@@ -17,8 +17,6 @@ final AudioPlayer globalAudioPlayer = AudioPlayer();
 // برای ردیابی موزیک در حال پخش
 String? currentAudioPath;
 
-
-
 void main() {
   runApp(const MusicApp());
 }
@@ -35,7 +33,6 @@ class MusicApp extends StatelessWidget {
         //'/music_shop': (context) => const MusicShopPage(),
         '/signin': (context) => const SignIn(),
         '/signup': (context) => const SignUp(),
-
       },
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(
@@ -61,7 +58,6 @@ class MusicApp extends StatelessWidget {
   }
 }
 
-// ... (rest of your main.dart remains unchanged)
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -151,203 +147,197 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-    if (index == 0) {
-      Navigator.pushNamed(context, '/');
-    } else if (index == 1) {
-      Navigator.pushNamed(context, '/music_shop');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      bottomNavigationBar: ClipRRect(
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(30),
-          topRight: Radius.circular(30),
+    return MultiProvider(
+      providers: [
+        Provider<List<MusicCard>>.value(value: localMusics),
+        Provider<List<MusicCard>>.value(value: downloadedMusics),
+      ],
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        bottomNavigationBar: ClipRRect(
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(30),
+            topRight: Radius.circular(30),
+          ),
+          child: Stack(
+            children: [
+              BottomNavigationBar(
+                backgroundColor: Color.fromRGBO(255, 255, 255, 0.07),
+                selectedItemColor: Colors.white,
+                unselectedItemColor: Colors.grey,
+                iconSize: 28,
+                selectedFontSize: 16,
+                unselectedFontSize: 16,
+                onTap: (index) {
+                  if (index == 1) {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => SignIn()));
+                  }
+                },
+                items: [
+                  BottomNavigationBarItem(
+                    label: 'Home',
+                    icon: SizedBox(
+                      height: 40,
+                      child: Center(child: Icon(Icons.home)),
+                    ),
+                  ),
+                  BottomNavigationBarItem(
+                    label: 'Shop',
+                    icon: SizedBox(
+                      height: 40,
+                      child: Center(child: Icon(Icons.shopping_bag)),
+                    ),
+                  ),
+                ],
+              ),
+              Positioned(
+                left: MediaQuery.of(context).size.width / 2 - 0.5,
+                top: 20,
+                bottom: 30,
+                child: Container(
+                  width: 1,
+                  color: Colors.grey.withOpacity(0.3),
+                ),
+              ),
+            ],
+          ),
         ),
-        child: Stack(
-          children: [
-            BottomNavigationBar(
-              backgroundColor: Color.fromRGBO(255, 255, 255, 0.07),
-              selectedItemColor: Colors.white,
-              unselectedItemColor: Colors.grey,
-              iconSize: 28,
-              selectedFontSize: 16,
-              unselectedFontSize: 16,
-              onTap: (index) {
-                if (index == 1) {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => SignIn()));
-                }
-              },
-              items: [
-                BottomNavigationBarItem(
-                  label: 'Home',
-                  icon: SizedBox(
-                    height: 40,
-                    child: Center(child: Icon(Icons.home)),
+        body: SafeArea(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: ListView(
+              children: [
+                Center(
+                  child: Text(
+                    "Home",
+                    style: TextStyle(
+                      fontFamily: 'Lora',
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
-                BottomNavigationBarItem(
-                  label: 'Shop',
-                  icon: SizedBox(
-                    height: 40,
-                    child: Center(child: Icon(Icons.shopping_bag)),
+                SizedBox(height: 12),
+                TextField(
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontFamily: 'Poppins',
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'type a music name ...',
+                    hintStyle: TextStyle(
+                      color: Colors.grey,
+                      fontFamily: 'Poppins',
+                      fontSize: 17,
+                    ),
+                    prefixIcon: Icon(Icons.search, color: Colors.white),
+                    filled: true,
+                    fillColor: Colors.grey.shade900,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(36),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Local Musics",
+                      style: TextStyle(
+                        fontFamily: 'Lora',
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ShowAllPage(
+                              title: "Show All Local Musics",
+                              isLocal: true,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        "Show All",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8),
+                SizedBox(
+                  height: 255,
+                  child: localMusics.isEmpty
+                      ? Center(
+                    child: Text(
+                      'No music found',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  )
+                      : ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: localMusics.length,
+                    separatorBuilder: (context, index) => SizedBox(width: 14),
+                    itemBuilder: (context, index) => localMusics[index],
+                  ),
+                ),
+                SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Downloaded Musics",
+                      style: TextStyle(
+                        fontFamily: 'Lora',
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    Text(
+                      "show all",
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8),
+                SizedBox(
+                  height: 255,
+                  child: downloadedMusics.isEmpty
+                      ? Center(
+                    child: Text(
+                      'No music found',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  )
+                      : ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: downloadedMusics.length,
+                    separatorBuilder: (context, index) => SizedBox(width: 14),
+                    itemBuilder: (context, index) => downloadedMusics[index],
                   ),
                 ),
               ],
             ),
-            Positioned(
-              left: MediaQuery.of(context).size.width / 2 - 0.5,
-              top: 20,
-              bottom: 30,
-              child: Container(
-                width: 1,
-                color: Colors.grey.withOpacity(0.3),
-              ),
-            ),
-          ],
-        ),
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: ListView(
-            children: [
-              Center(
-                child: Text(
-                  "Home",
-                  style: TextStyle(
-                    fontFamily: 'Lora',
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              SizedBox(height: 12),
-              TextField(
-                style: TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'Poppins',
-                ),
-                decoration: InputDecoration(
-                  hintText: 'type a music name ...',
-                  hintStyle: TextStyle(
-                    color: Colors.grey,
-                    fontFamily: 'Poppins',
-                    fontSize: 17,
-                  ),
-                  prefixIcon: Icon(Icons.search, color: Colors.white),
-                  filled: true,
-                  fillColor: Colors.grey.shade900,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(36),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Local Musics",
-                    style: TextStyle(
-                      fontFamily: 'Lora',
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ShowAllPage(
-                            title: "Show All Local Musics",
-                            isLocal: true,
-                          ),
-                        ),
-                      );
-                    },
-                    child: Text(
-                      "Show All",
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-
-                ],
-              ),
-              SizedBox(height: 8),
-              SizedBox(
-                height: 255,
-                child: localMusics.isEmpty
-                    ? Center(
-                  child: Text(
-                    'No music found',
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontFamily: 'Poppins',
-                    ),
-                  ),
-                )
-                    : ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: localMusics.length,
-                  separatorBuilder: (context, index) => SizedBox(width: 14),
-                  itemBuilder: (context, index) => localMusics[index],
-                ),
-              ),
-              SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Downloaded Musics",
-                    style: TextStyle(
-                      fontFamily: 'Lora',
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  Text(
-                    "show all",
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontFamily: 'Poppins',
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 8),
-              SizedBox(
-                height: 255,
-                child: downloadedMusics.isEmpty
-                    ? Center(
-                  child: Text(
-                    'No music found',
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontFamily: 'Poppins',
-                    ),
-                  ),
-                )
-                    : ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: downloadedMusics.length,
-                  separatorBuilder: (context, index) => SizedBox(width: 14),
-                  itemBuilder: (context, index) => downloadedMusics[index],
-                ),
-              ),
-            ],
           ),
         ),
       ),
@@ -440,6 +430,7 @@ class _MusicCardState extends State<MusicCard> {
             children: [
               GestureDetector(
                 onTap: () {
+                  final musicList = Provider.of<List<MusicCard>>(context, listen: false);
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -451,6 +442,15 @@ class _MusicCardState extends State<MusicCard> {
                         audioPath: widget.audioPath,
                         isPlaying: isPlaying,
                         position: _position,
+                        playlist: musicList
+                            .map((music) => {
+                          'title': music.title,
+                          'artist': music.artist,
+                          'image': music.image,
+                          'audioPath': music.audioPath,
+                        })
+                            .toList(),
+                        currentIndex: musicList.indexWhere((music) => music.audioPath == widget.audioPath),
                       ),
                     ),
                   );
@@ -476,6 +476,7 @@ class _MusicCardState extends State<MusicCard> {
                     Expanded(
                       child: GestureDetector(
                         onTap: () {
+                          final musicList = Provider.of<List<MusicCard>>(context, listen: false);
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -487,6 +488,16 @@ class _MusicCardState extends State<MusicCard> {
                                 audioPath: widget.audioPath,
                                 isPlaying: isPlaying,
                                 position: _position,
+                                playlist: musicList
+                                    .map((music) => {
+                                  'title': music.title,
+                                  'artist': music.artist,
+                                  'image': music.image,
+                                  'audioPath': music.audioPath,
+                                })
+                                    .toList(),
+                                currentIndex:
+                                musicList.indexWhere((music) => music.audioPath == widget.audioPath),
                               ),
                             ),
                           );
