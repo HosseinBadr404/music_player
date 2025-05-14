@@ -27,12 +27,8 @@ class PlayerPage extends StatefulWidget {
 
 class _PlayerPageState extends State<PlayerPage> {
   bool _isPlaying = false;
-  bool _isShuffling = false;
-  LoopMode _loopMode = LoopMode.off;
-
   Duration _position = Duration.zero;
   Duration _duration = Duration.zero;
-  double _volume = 1.0;
 
   @override
   void initState() {
@@ -40,31 +36,27 @@ class _PlayerPageState extends State<PlayerPage> {
     _isPlaying = widget.isPlaying;
     _position = widget.position;
 
-    _initializeAudio();
-
     widget.audioPlayer.playingStream.listen((playing) {
       if (mounted) {
-        setState(() => _isPlaying = playing);
+        setState(() {
+          _isPlaying = playing;
+        });
       }
     });
     widget.audioPlayer.positionStream.listen((position) {
       if (mounted) {
-        setState(() => _position = position);
+        setState(() {
+          _position = position;
+        });
       }
     });
     widget.audioPlayer.durationStream.listen((duration) {
       if (mounted) {
-        setState(() => _duration = duration ?? Duration.zero);
+        setState(() {
+          _duration = duration ?? Duration.zero;
+        });
       }
     });
-  }
-
-  Future<void> _initializeAudio() async {
-    try {
-      await widget.audioPlayer.setAsset(widget.audioPath);
-    } catch (e) {
-      debugPrint("Error loading audio: $e");
-    }
   }
 
   Future<void> _togglePlayPause() async {
@@ -74,30 +66,6 @@ class _PlayerPageState extends State<PlayerPage> {
       await widget.audioPlayer.seek(_position);
       await widget.audioPlayer.play();
     }
-  }
-
-  void _toggleShuffle() {
-    setState(() {
-      _isShuffling = !_isShuffling;
-      widget.audioPlayer.setShuffleModeEnabled(_isShuffling);
-    });
-  }
-
-  void _toggleLoop() {
-    setState(() {
-      _loopMode = _loopMode == LoopMode.off ? LoopMode.one : LoopMode.off;
-      widget.audioPlayer.setLoopMode(_loopMode);
-    });
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
-  String _formatTime(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, '0');
-    return "${twoDigits(duration.inMinutes)}:${twoDigits(duration.inSeconds.remainder(60))}";
   }
 
   @override
@@ -110,7 +78,7 @@ class _PlayerPageState extends State<PlayerPage> {
         elevation: 0,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(20),
         child: Column(
           children: [
             ClipRRect(
@@ -122,113 +90,31 @@ class _PlayerPageState extends State<PlayerPage> {
                 fit: BoxFit.cover,
               ),
             ),
-            const SizedBox(height: 30),
+            SizedBox(height: 30),
             Text(
               widget.title,
-              style: Theme.of(context)
-                  .textTheme
-                  .titleLarge
-                  ?.copyWith(color: Colors.white),
-              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleLarge,
             ),
             Text(
               widget.artist,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: Colors.white70),
-              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey),
             ),
-            const SizedBox(height: 20),
-            Slider(
-              min: 0,
-              max: _duration.inSeconds.toDouble(),
-              value: _position.inSeconds.toDouble().clamp(0, _duration.inSeconds.toDouble()),
-              onChanged: (value) {
-                final newPos = Duration(seconds: value.toInt());
-                widget.audioPlayer.seek(newPos);
-              },
-              activeColor: Colors.white,
-              inactiveColor: Colors.grey,
-            ),
+            SizedBox(height: 20),
             Text(
-              "${_formatTime(_position)} / ${_formatTime(_duration)}",
-              style: const TextStyle(color: Colors.white70),
+              "${_position.inMinutes}:${(_position.inSeconds % 60).toString().padLeft(2, '0')} / "
+                  "${_duration.inMinutes}:${(_duration.inSeconds % 60).toString().padLeft(2, '0')}",
+              style: TextStyle(color: Colors.white),
             ),
-            const SizedBox(height: 20),
-
-            /// --- Controls Row ---
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  icon: Icon(_isShuffling ? Icons.shuffle_on : Icons.shuffle),
-                  color: _isShuffling ? Colors.greenAccent : Colors.white,
-                  onPressed: _toggleShuffle,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.replay_10),
-                  iconSize: 30,
-                  color: Colors.white,
-                  onPressed: () async {
-                    final newPosition = _position - const Duration(seconds: 10);
-                    await widget.audioPlayer.seek(newPosition > Duration.zero ? newPosition : Duration.zero);
-                  },
-                ),
-                IconButton(
-                  icon: Icon(
-                    _isPlaying ? Icons.pause_circle_filled : Icons.play_circle_fill,
-                  ),
-                  iconSize: 70,
-                  color: Colors.white,
-                  onPressed: _togglePlayPause,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.forward_10),
-                  iconSize: 30,
-                  color: Colors.white,
-                  onPressed: () async {
-                    final newPosition = _position + const Duration(seconds: 10);
-                    if (newPosition < _duration) {
-                      await widget.audioPlayer.seek(newPosition);
-                    }
-                  },
-                ),
-                IconButton(
-                  icon: Icon(
-                    _loopMode == LoopMode.one ? Icons.repeat_one : Icons.repeat,
-                  ),
-                  color: _loopMode == LoopMode.one ? Colors.greenAccent : Colors.white,
-                  onPressed: _toggleLoop,
-                ),
-              ],
+            Spacer(),
+            IconButton(
+              icon: Icon(
+                _isPlaying ? Icons.pause_circle_filled : Icons.play_circle_fill,
+                size: 80,
+                color: Colors.white,
+              ),
+              onPressed: _togglePlayPause,
             ),
-            const SizedBox(height: 20),
-
-            /// --- Volume Slider ---
-            Column(
-              children: [
-                const Text(
-                  'Volume',
-                  style: TextStyle(color: Colors.white),
-                ),
-                Slider(
-                  value: _volume,
-                  onChanged: (value) {
-                    setState(() {
-                      _volume = value;
-                      widget.audioPlayer.setVolume(value);
-                    });
-                  },
-                  min: 0,
-                  max: 1,
-                  divisions: 10,
-                  activeColor: Colors.white,
-                  inactiveColor: Colors.grey,
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
+            SizedBox(height: 30),
           ],
         ),
       ),

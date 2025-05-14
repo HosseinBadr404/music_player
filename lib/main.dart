@@ -7,33 +7,20 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
 import 'PlayerPage.dart';
-import 'MusicShopPage.dart';
-import 'LoginPage.dart';
-import 'SignupPage.dart';
+//import 'MusicShopPage.dart';
+import 'SignIn.dart';
+import 'SignUp.dart';
+import 'ShowAllPage.dart';
 
 // پخش‌کننده مشترک برای همه صفحات
 final AudioPlayer globalAudioPlayer = AudioPlayer();
 // برای ردیابی موزیک در حال پخش
 String? currentAudioPath;
 
-// Theme provider
-class ThemeProvider with ChangeNotifier {
-  bool _isDarkTheme = true;
-  bool get isDarkTheme => _isDarkTheme;
 
-  void toggleTheme() {
-    _isDarkTheme = !_isDarkTheme;
-    notifyListeners();
-  }
-}
 
 void main() {
-  runApp(
-    ChangeNotifierProvider(
-      create: (_) => ThemeProvider(),
-      child: const MusicApp(),
-    ),
-  );
+  runApp(const MusicApp());
 }
 
 class MusicApp extends StatelessWidget {
@@ -41,34 +28,32 @@ class MusicApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
     return MaterialApp(
       initialRoute: '/',
       routes: {
         '/': (context) => const HomePage(),
-        '/music_shop': (context) => const MusicShopPage(),
-        '/login': (context) => const LoginPage(),
-        '/signup': (context) => const SignupPage(),
+        //'/music_shop': (context) => const MusicShopPage(),
+        '/signin': (context) => const SignIn(),
+        '/signup': (context) => const SignUp(),
+
       },
       debugShowCheckedModeBanner: false,
-      theme: themeProvider.isDarkTheme
-          ? ThemeData.dark().copyWith(
-        textTheme: GoogleFonts.balooBhaijaan2TextTheme(
-          ThemeData.dark().textTheme.copyWith(
-            bodySmall: TextStyle(fontSize: 15, fontWeight: FontWeight.w400),
-            bodyMedium: TextStyle(fontWeight: FontWeight.w600),
-            bodyLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-            titleLarge: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+      theme: ThemeData.dark().copyWith(
+        textTheme: ThemeData.dark().textTheme.copyWith(
+          bodySmall: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w400,
+            fontFamily: 'Poppins',
           ),
-        ),
-      )
-          : ThemeData.light().copyWith(
-        textTheme: GoogleFonts.balooBhaijaan2TextTheme(
-          ThemeData.light().textTheme.copyWith(
-            bodySmall: TextStyle(fontSize: 15, fontWeight: FontWeight.w400),
-            bodyMedium: TextStyle(fontWeight: FontWeight.w600),
-            bodyLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-            titleLarge: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+          bodyLarge: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            fontFamily: 'Lora',
+          ),
+          titleLarge: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+            fontFamily: 'Lora',
           ),
         ),
       ),
@@ -98,18 +83,15 @@ class _HomePageState extends State<HomePage> {
   Future<void> _requestPermissionsAndLoadMusic() async {
     final permissionStatus = await Permission.audio.request();
     if (permissionStatus.isGranted) {
-      print('Audio permission granted');
-      await _loadMusicFiles();
+      _loadMusicFiles();
     } else if (permissionStatus.isDenied) {
-      print('Audio permission denied');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Audio permission is required to load music')),
+        SnackBar(content: Text('Audio permission is required')),
       );
     } else if (permissionStatus.isPermanentlyDenied) {
-      print('Audio permission permanently denied');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Audio permission is permanently denied. Please enable it in settings.'),
+          content: Text('Please enable audio permission in settings.'),
           action: SnackBarAction(
             label: 'Settings',
             onPressed: () => openAppSettings(),
@@ -123,72 +105,50 @@ class _HomePageState extends State<HomePage> {
     List<MusicCard> local = [];
     List<MusicCard> downloaded = [];
 
-    try {
-      Directory? musicDir = Directory('/storage/emulated/0/Music/musics');
-      Directory? downloadDir = Directory('/storage/emulated/0/Download/dmusics');
+    Directory musicDir = Directory('/storage/emulated/0/Music/musics');
+    Directory downloadDir = Directory('/storage/emulated/0/Download/dmusics');
 
-      if (!await musicDir.exists()) {
-        final externalDir = await getExternalStorageDirectory();
-        musicDir = Directory('${externalDir?.path ?? ''}/musics');
-        print('Fallback to external storage: ${musicDir.path}');
-      }
-      if (!await downloadDir.exists()) {
-        final dlDir = await getDownloadsDirectory();
-        downloadDir = Directory('${dlDir?.path ?? ''}/dmusics');
-        print('Fallback to download directory: ${downloadDir.path}');
-      }
+    if (!await musicDir.exists()) {
+      final externalDir = await getExternalStorageDirectory();
+      musicDir = Directory('${externalDir?.path ?? ''}/musics');
+    }
+    if (!await downloadDir.exists()) {
+      final dlDir = await getDownloadsDirectory();
+      downloadDir = Directory('${dlDir?.path ?? ''}/dmusics');
+    }
 
-      print('Checking music directory: ${musicDir.path}');
-      print('Checking download directory: ${downloadDir.path}');
-
-      if (await musicDir.exists()) {
-        await for (var file in musicDir.list(recursive: false)) {
-          if (file is File && file.path.toLowerCase().endsWith('.mp3')) {
-            final fileName = file.path.split('/').last.replaceAll('.mp3', '');
-            local.add(MusicCard(
-              title: fileName,
-              artist: 'Unknown',
-              image: 'assets/images/c1.jpg',
-              audioPath: file.path,
-            ));
-          }
+    if (await musicDir.exists()) {
+      await for (var file in musicDir.list(recursive: false)) {
+        if (file is File && file.path.toLowerCase().endsWith('.mp3')) {
+          final fileName = file.path.split('/').last.replaceAll('.mp3', '');
+          local.add(MusicCard(
+            title: fileName,
+            artist: 'Unknown',
+            image: 'assets/images/c1.jpg',
+            audioPath: file.path,
+          ));
         }
-        print('Found ${local.length} local music files');
-      } else {
-        print('Music directory does not exist: ${musicDir.path}');
-      }
-
-      if (await downloadDir.exists()) {
-        await for (var file in downloadDir.list(recursive: false)) {
-          if (file is File && file.path.toLowerCase().endsWith('.mp3')) {
-            final fileName = file.path.split('/').last.replaceAll('.mp3', '');
-            downloaded.add(MusicCard(
-              title: fileName,
-              artist: 'Unknown',
-              image: 'assets/images/c1.jpg',
-              audioPath: file.path,
-            ));
-          }
-        }
-        print('Found ${downloaded.length} downloaded music files');
-      } else {
-        print('Download directory does not exist: ${downloadDir.path}');
-      }
-    } catch (e) {
-      print('Error loading music files: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading music: $e')),
-        );
       }
     }
 
-    if (mounted) {
-      setState(() {
-        localMusics = local;
-        downloadedMusics = downloaded;
-      });
+    if (await downloadDir.exists()) {
+      await for (var file in downloadDir.list(recursive: false)) {
+        if (file is File && file.path.toLowerCase().endsWith('.mp3')) {
+          final fileName = file.path.split('/').last.replaceAll('.mp3', '');
+          downloaded.add(MusicCard(
+            title: fileName,
+            artist: 'Unknown',
+            image: 'assets/images/c1.jpg',
+            audioPath: file.path,
+          ));
+        }
+      }
     }
+
+    setState(() {
+      localMusics = local;
+      downloadedMusics = downloaded;
+    });
   }
 
   void _onItemTapped(int index) {
@@ -220,8 +180,11 @@ class _HomePageState extends State<HomePage> {
               iconSize: 28,
               selectedFontSize: 16,
               unselectedFontSize: 16,
-              currentIndex: _selectedIndex,
-              onTap: _onItemTapped,
+              onTap: (index) {
+                if (index == 1) {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => SignIn()));
+                }
+              },
               items: [
                 BottomNavigationBarItem(
                   label: 'Home',
@@ -257,14 +220,29 @@ class _HomePageState extends State<HomePage> {
           child: ListView(
             children: [
               Center(
-                child: Text("Home", style: Theme.of(context).textTheme.titleLarge),
+                child: Text(
+                  "Home",
+                  style: TextStyle(
+                    fontFamily: 'Lora',
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
               ),
               SizedBox(height: 12),
               TextField(
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontFamily: 'Poppins',
+                ),
                 decoration: InputDecoration(
                   hintText: 'type a music name ...',
-                  hintStyle: TextStyle(color: Colors.grey),
+                  hintStyle: TextStyle(
+                    color: Colors.grey,
+                    fontFamily: 'Poppins',
+                    fontSize: 17,
+                  ),
                   prefixIcon: Icon(Icons.search, color: Colors.white),
                   filled: true,
                   fillColor: Colors.grey.shade900,
@@ -274,28 +252,105 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
-              SizedBox(height: 40),
-              sectionTitle(context, "Local Musics"),
+              SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "Local Musics",
+                    style: TextStyle(
+                      fontFamily: 'Lora',
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ShowAllPage(
+                            title: "Show All Local Musics",
+                            isLocal: true,
+                          ),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      "Show All",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+
+                ],
+              ),
               SizedBox(height: 8),
-              musicList(localMusics),
+              SizedBox(
+                height: 255,
+                child: localMusics.isEmpty
+                    ? Center(
+                  child: Text(
+                    'No music found',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+                )
+                    : ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: localMusics.length,
+                  separatorBuilder: (context, index) => SizedBox(width: 14),
+                  itemBuilder: (context, index) => localMusics[index],
+                ),
+              ),
               SizedBox(height: 24),
-              sectionTitle(context, "Downloaded Musics"),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "Downloaded Musics",
+                    style: TextStyle(
+                      fontFamily: 'Lora',
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  Text(
+                    "show all",
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+                ],
+              ),
               SizedBox(height: 8),
-              musicList(downloadedMusics),
+              SizedBox(
+                height: 255,
+                child: downloadedMusics.isEmpty
+                    ? Center(
+                  child: Text(
+                    'No music found',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+                )
+                    : ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: downloadedMusics.length,
+                  separatorBuilder: (context, index) => SizedBox(width: 14),
+                  itemBuilder: (context, index) => downloadedMusics[index],
+                ),
+              ),
             ],
           ),
         ),
       ),
-    );
-  }
-
-  Widget sectionTitle(BuildContext context, String title) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(title, style: Theme.of(context).textTheme.bodyLarge),
-        Text("show all", style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)),
-      ],
     );
   }
 
