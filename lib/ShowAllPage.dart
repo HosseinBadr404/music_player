@@ -1,7 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'audio_player_model.dart';
 import 'PlayerPage.dart';
-import 'main.dart';
 
 class ShowAllPage extends StatefulWidget {
   final String title;
@@ -18,7 +19,6 @@ class ShowAllPage extends StatefulWidget {
 }
 
 class _ShowAllPageState extends State<ShowAllPage> {
-  List<Map<String, String>> musicDataList = [];
   List<MusicCardItem> musicItems = [];
 
   @override
@@ -28,19 +28,16 @@ class _ShowAllPageState extends State<ShowAllPage> {
   }
 
   Future<void> _loadMusicFiles() async {
-    List<Map<String, String>> dataList = [];
-    String directoryPath = widget.isLocal
+    final directoryPath = widget.isLocal
         ? '/storage/emulated/0/Music/musics'
         : '/storage/emulated/0/Download/dmusics';
+    final directory = Directory(directoryPath);
 
-    Directory directory = Directory(directoryPath);
-
+    final dataList = <Map<String, String>>[];
     if (await directory.exists()) {
-      await for (var file in directory.list(recursive: false)) {
+      await for (final file in directory.list(recursive: false)) {
         if (file is File && file.path.toLowerCase().endsWith('.mp3')) {
           final fileName = file.path.split('/').last.replaceAll('.mp3', '');
-
-          // اضافه کردن داده‌ها به dataList
           dataList.add({
             'title': fileName,
             'artist': 'Unknown',
@@ -52,9 +49,6 @@ class _ShowAllPageState extends State<ShowAllPage> {
     }
 
     setState(() {
-      musicDataList = dataList;
-
-      // ایجاد آیتم‌ها با اطلاعات کامل
       musicItems = dataList.map((data) => MusicCardItem(
         title: data['title']!,
         artist: data['artist']!,
@@ -63,17 +57,6 @@ class _ShowAllPageState extends State<ShowAllPage> {
         playlist: dataList,
       )).toList();
     });
-  }
-
-  // اضافه کردن این متد برای به‌روزرسانی UI
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (mounted) {
-      setState(() {
-        // به‌روزرسانی وضعیت نمایش
-      });
-    }
   }
 
   @override
@@ -85,26 +68,26 @@ class _ShowAllPageState extends State<ShowAllPage> {
         backgroundColor: Colors.black,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.sort_rounded, color: Colors.white),
+            icon: const Icon(Icons.sort_rounded, color: Colors.white),
             onPressed: () {},
           ),
         ],
       ),
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Container(
             decoration: BoxDecoration(
               color: Colors.grey.shade900,
               borderRadius: BorderRadius.circular(28),
             ),
             child: musicItems.isEmpty
-                ? Center(
+                ? const Center(
               child: Text(
                 'No music found',
                 style: TextStyle(
@@ -115,16 +98,16 @@ class _ShowAllPageState extends State<ShowAllPage> {
               ),
             )
                 : ListView.separated(
-              padding: EdgeInsets.all(15),
+              padding: const EdgeInsets.all(15),
               scrollDirection: Axis.vertical,
               itemCount: musicItems.length,
-              separatorBuilder: (context, index) => Container(
+              separatorBuilder: (_, __) => Container(
                 height: 1,
                 width: MediaQuery.of(context).size.width * 0.7,
-                margin: EdgeInsets.symmetric(horizontal: 20),
+                margin: const EdgeInsets.symmetric(horizontal: 20),
                 color: Colors.grey.withOpacity(0.3),
               ),
-              itemBuilder: (context, index) => musicItems[index],
+              itemBuilder: (_, index) => musicItems[index],
             ),
           ),
         ),
@@ -133,7 +116,7 @@ class _ShowAllPageState extends State<ShowAllPage> {
   }
 }
 
-class MusicCardItem extends StatefulWidget {
+class MusicCardItem extends StatelessWidget {
   final String title;
   final String artist;
   final String image;
@@ -150,122 +133,47 @@ class MusicCardItem extends StatefulWidget {
   });
 
   @override
-  State<MusicCardItem> createState() => _MusicCardItemState();
-}
-
-class _MusicCardItemState extends State<MusicCardItem> {
-  Duration _position = Duration.zero;
-  bool _isPlaying = false;
-
-  @override
-  void initState() {
-    super.initState();
-    globalAudioPlayer.positionStream.listen((position) {
-      if (mounted) {
-        setState(() {
-          _position = position;
-        });
-      }
-    });
-
-    globalAudioPlayer.playingStream.listen((playing) {
-      if (mounted) {
-        setState(() {
-          _isPlaying = playing;
-        });
-      }
-    });
-  }
-
-  // اضافه کردن این متد برای به‌روزرسانی UI
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (mounted) {
-      setState(() {
-        // به‌روزرسانی وضعیت نمایش
-      });
-    }
-  }
-
-  Future<void> _togglePlay() async {
-    try {
-      if (currentAudioPath == widget.audioPath && globalAudioPlayer.playing) {
-        await globalAudioPlayer.pause();
-      } else {
-        await globalAudioPlayer.stop();
-        currentAudioPath = widget.audioPath;
-
-        // به‌روزرسانی پلی‌لیست جاری
-        currentPlaylist = widget.playlist;
-        currentPlayingIndex = widget.playlist.indexWhere((item) => item['audioPath'] == widget.audioPath);
-
-        await globalAudioPlayer.setFilePath(widget.audioPath);
-        await globalAudioPlayer.play();
-      }
-      setState(() {});
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error playing music')),
-      );
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    bool isPlaying = currentAudioPath == widget.audioPath && globalAudioPlayer.playing;
+    final audioModel = Provider.of<AudioPlayerModel>(context);
+    final index = playlist.indexWhere((item) => item['audioPath'] == audioPath);
+    final isPlaying = audioModel.currentAudioPath == audioPath && audioModel.isPlaying;
 
     return GestureDetector(
       onTap: () {
-        // ذخیره پلی‌لیست فعلی
-        currentPlaylist = widget.playlist;
-        currentPlayingIndex = widget.playlist.indexWhere((item) => item['audioPath'] == widget.audioPath);
-
+        audioModel.playTrack(audioPath, playlist, index);
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => PlayerPage(
-              audioPlayer: globalAudioPlayer,
-              title: widget.title,
-              artist: widget.artist,
-              image: widget.image,
-              audioPath: widget.audioPath,
-              isPlaying: isPlaying,
-              position: _position,
-              playlist: widget.playlist,
-              currentIndex: currentPlayingIndex,
+            builder: (_) => PlayerPage(
+              playlist: playlist,
+              currentIndex: index,
             ),
           ),
-        ).then((_) {
-          // وقتی از PlayerPage برمی‌گردید، وضعیت را به‌روز کنید
-          if (mounted) {
-            setState(() {});
-          }
-        });
+        );
       },
       child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 18),
+        padding: const EdgeInsets.symmetric(vertical: 18),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(20),
               child: Image.asset(
-                widget.image,
+                image,
                 width: 80,
                 height: 80,
                 fit: BoxFit.cover,
               ),
             ),
-            SizedBox(width: 16),
+            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    widget.title,
-                    style: TextStyle(
+                    title,
+                    style: const TextStyle(
                       fontFamily: 'Lora',
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -274,10 +182,10 @@ class _MusicCardItemState extends State<MusicCardItem> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
-                    widget.artist,
-                    style: TextStyle(
+                    artist,
+                    style: const TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 14,
                       color: Colors.grey,
@@ -289,7 +197,13 @@ class _MusicCardItemState extends State<MusicCardItem> {
               ),
             ),
             IconButton(
-              onPressed: _togglePlay,
+              onPressed: () {
+                if (audioModel.currentAudioPath == audioPath && audioModel.isPlaying) {
+                  audioModel.togglePlayPause();
+                } else {
+                  audioModel.playTrack(audioPath, playlist, index);
+                }
+              },
               icon: Icon(
                 isPlaying ? Icons.pause_circle_filled : Icons.play_circle_fill,
                 color: Colors.white,
