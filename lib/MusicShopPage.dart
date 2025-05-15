@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+//import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'MusicShopListPage.dart';
 import 'SignIn.dart';
-import 'AccountPage.dart';
+import 'profile_page.dart'; // Replace AccountPage with ProfilePage
 import 'fake_user_data.dart';
 
 class MusicShopPage extends StatefulWidget {
@@ -102,13 +102,13 @@ class _MusicShopPageState extends State<MusicShopPage> {
                   Positioned(
                     right: 0,
                     child: IconButton(
-                      icon: const Icon(Icons.account_circle, color: Colors.white , size: 32,),
+                      icon: const Icon(Icons.account_circle, color: Colors.white, size: 32),
                       onPressed: () {
                         if (FakeUserData.isLoggedIn()) {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const AccountPage(),
+                              builder: (context) => const ProfilePage(), // Changed to ProfilePage
                             ),
                           );
                         } else {
