@@ -19,326 +19,372 @@ class _ProfilePageState extends State<ProfilePage> {
   final ImagePicker _picker = ImagePicker();
   bool isDarkTheme = true;
 
+  // Theme data
+  late ThemeData _currentTheme;
+
+  @override
+  void initState() {
+    super.initState();
+    _updateTheme();
+  }
+
+  void _updateTheme() {
+    _currentTheme = isDarkTheme ? _darkTheme : _lightTheme;
+  }
+
+  // Dark theme
+  final ThemeData _darkTheme = ThemeData(
+    brightness: Brightness.dark,
+    scaffoldBackgroundColor: Colors.black,
+    cardColor: const Color(0xFF1A1A1A),
+    primaryColor: const Color(0xFF4CAF50),
+    colorScheme: const ColorScheme.dark(
+      primary: Color(0xFF4CAF50),
+      secondary: Color(0xFF1E2E23),
+    ),
+  );
+
+  // Light theme
+  final ThemeData _lightTheme = ThemeData(
+    brightness: Brightness.light,
+    scaffoldBackgroundColor: Colors.white,
+    cardColor: const Color(0xFFF5F5F5),
+    primaryColor: const Color(0xFF4CAF50),
+    colorScheme: const ColorScheme.light(
+      primary: Color(0xFF4CAF50),
+      secondary: Color(0xFFE8F5E9),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Back button and Profile title
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16.0),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                      const Expanded(
-                        child: Center(
-                          child: Text(
-                            'Profile',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+    _updateTheme();
+
+    return Theme(
+      data: _currentTheme,
+      child: Scaffold(
+        backgroundColor: _currentTheme.scaffoldBackgroundColor,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Back button and Profile title
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16.0),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: Icon(
+                            Icons.arrow_back_ios,
+                            color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black,
+                          ),
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                        Expanded(
+                          child: Center(
+                            child: Text(
+                              'Profile',
+                              style: TextStyle(
+                                color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 48), // Balance the back button
-                    ],
+                        const SizedBox(width: 48), // Balance the back button
+                      ],
+                    ),
                   ),
-                ),
 
-                // Profile picture with upload button
-                Center(
-                  child: Stack(
-                    children: [
-                      ClipOval(
-                        child: Container(
-                          width: 100,
-                          height: 100,
-                          color: Colors.grey[700],
-                          child: _profileImage != null
-                              ? Image.file(
-                            _profileImage!,
-                            fit: BoxFit.cover,
-                          )
-                              : const Icon(
-                            Icons.person,
-                            size: 60,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        right: 0,
-                        bottom: 0,
-                        child: GestureDetector(
-                          onTap: _showImagePicker,
+                  // Profile picture with upload button
+                  Center(
+                    child: Stack(
+                      children: [
+                        ClipOval(
                           child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF4CAF50),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.camera_alt,
-                              color: Colors.white,
-                              size: 20,
+                            width: 100,
+                            height: 100,
+                            color: _currentTheme.brightness == Brightness.dark ? Colors.grey[700] : Colors.grey[300],
+                            child: _profileImage != null
+                                ? Image.file(
+                              _profileImage!,
+                              fit: BoxFit.cover,
+                            )
+                                : Icon(
+                              Icons.person,
+                              size: 60,
+                              color: _currentTheme.brightness == Brightness.dark ? Colors.grey : Colors.grey[600],
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                        Positioned(
+                          right: 0,
+                          bottom: 0,
+                          child: GestureDetector(
+                            onTap: _showImagePicker,
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF4CAF50),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.camera_alt,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
 
-                const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-                // User Info Card
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1A1A1A),
-                    borderRadius: BorderRadius.circular(12),
+                  // User Info Card
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    decoration: BoxDecoration(
+                      color: _currentTheme.cardColor,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      children: [
+                        // Username row
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Username',
+                              style: TextStyle(
+                                color: _currentTheme.brightness == Brightness.dark ? Colors.grey : Colors.grey[700],
+                                fontSize: 16,
+                              ),
+                            ),
+                            Text(
+                              username,
+                              style: TextStyle(
+                                color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Email row
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Email',
+                              style: TextStyle(
+                                color: _currentTheme.brightness == Brightness.dark ? Colors.grey : Colors.grey[700],
+                                fontSize: 16,
+                              ),
+                            ),
+                            Text(
+                              email,
+                              style: TextStyle(
+                                color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // Edit Profile Button
+                        SizedBox(
+                          width: double.infinity,
+                          height: 45,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF005701),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            onPressed: _showEditProfileDialog,
+                            child: const Text(
+                              'Edit Profile',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  child: Column(
-                    children: [
-                      // Username row
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Username',
-                            style: TextStyle(
-                              color: Colors.grey,
-                              fontSize: 16,
-                            ),
-                          ),
-                          Text(
-                            username,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
 
-                      const SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-                      // Email row
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Email',
-                            style: TextStyle(
-                              color: Colors.grey,
-                              fontSize: 16,
+                  // Available Credit
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    decoration: BoxDecoration(
+                      color: _currentTheme.cardColor,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Available Credit',
+                              style: TextStyle(
+                                color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black,
+                                fontSize: 16,
+                              ),
                             ),
-                          ),
-                          Text(
-                            email,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
+                            const SizedBox(height: 4),
+                            Text(
+                              '\$${credit.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                color: Color(0xFF4CAF50),
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      // Edit Profile Button
-                      SizedBox(
-                        width: double.infinity,
-                        height: 45,
-                        child: ElevatedButton(
+                          ],
+                        ),
+                        ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF4CAF50),
+                            backgroundColor: _currentTheme.colorScheme.secondary,
+                            foregroundColor: const Color(0xFF4CAF50),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(20),
                             ),
                           ),
-                          onPressed: _showEditProfileDialog,
-                          child: const Text(
-                            'Edit Profile',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
+                          onPressed: () {
+                            _showAddCreditOptions();
+                          },
+                          child: const Text('Add Credit'),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Current Subscription
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    decoration: BoxDecoration(
+                      color: _currentTheme.cardColor,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Current Subscription',
+                              style: TextStyle(
+                                color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black,
+                                fontSize: 16,
+                              ),
                             ),
+                            const SizedBox(height: 4),
+                            Text(
+                              subscriptionPlan,
+                              style: TextStyle(
+                                color: _currentTheme.brightness == Brightness.dark ? Colors.grey : Colors.grey[700],
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _currentTheme.colorScheme.secondary,
+                            foregroundColor: const Color(0xFF4CAF50),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                          onPressed: _showSubscriptionOptions,
+                          child: const Text('Upgrade to Premium'),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Dark Theme Toggle
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    decoration: BoxDecoration(
+                      color: _currentTheme.cardColor,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Dark Theme',
+                          style: TextStyle(
+                            color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black,
+                            fontSize: 16,
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                // Available Credit
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1A1A1A),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Available Credit',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '\$${credit.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              color: Color(0xFF4CAF50),
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF1E2E23),
-                          foregroundColor: const Color(0xFF4CAF50),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
+                        Switch(
+                          value: isDarkTheme,
+                          onChanged: (value) {
+                            setState(() {
+                              isDarkTheme = value;
+                              _updateTheme();
+                            });
+                          },
+                          activeColor: const Color(0xFF4CAF50),
+                          activeTrackColor: const Color(0xFF1E2E23),
                         ),
-                        onPressed: () {
-                          // Add credit functionality
-                        },
-                        child: const Text('Add Credit'),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
 
-                const SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-                // Current Subscription
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1A1A1A),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Current Subscription',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            subscriptionPlan,
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF1E2E23),
-                          foregroundColor: const Color(0xFF4CAF50),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
+                  // Delete Account Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        onPressed: _showSubscriptionOptions,
-                        child: const Text('Upgrade to Premium'),
                       ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                // Dark Theme Toggle
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1A1A1A),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Dark Theme',
+                      onPressed: _showDeleteAccountConfirmation,
+                      child: const Text(
+                        'Delete Account',
                         style: TextStyle(
-                          color: Colors.white,
                           fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
                         ),
                       ),
-                      Switch(
-                        value: isDarkTheme,
-                        onChanged: (value) {
-                          setState(() {
-                            isDarkTheme = value;
-                          });
-                          // Implement theme switching logic here
-                        },
-                        activeColor: const Color(0xFF4CAF50),
-                        activeTrackColor: const Color(0xFF1E2E23),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                // Delete Account Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    onPressed: _showDeleteAccountConfirmation,
-                    child: const Text(
-                      'Delete Account',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
                     ),
                   ),
-                ),
 
-                const SizedBox(height: 30),
-              ],
+                  const SizedBox(height: 30),
+                ],
+              ),
             ),
           ),
         ),
@@ -350,7 +396,7 @@ class _ProfilePageState extends State<ProfilePage> {
   void _showImagePicker() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1A1A1A),
+      backgroundColor: _currentTheme.cardColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -360,10 +406,10 @@ class _ProfilePageState extends State<ProfilePage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
+              Text(
                 'Change Profile Picture',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -371,7 +417,10 @@ class _ProfilePageState extends State<ProfilePage> {
               const SizedBox(height: 20),
               ListTile(
                 leading: const Icon(Icons.photo_library, color: Color(0xFF4CAF50)),
-                title: const Text('Choose from Gallery', style: TextStyle(color: Colors.white)),
+                title: Text(
+                  'Choose from Gallery',
+                  style: TextStyle(color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black),
+                ),
                 onTap: () {
                   _getImage(ImageSource.gallery);
                   Navigator.pop(context);
@@ -379,7 +428,10 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               ListTile(
                 leading: const Icon(Icons.camera_alt, color: Color(0xFF4CAF50)),
-                title: const Text('Take a Photo', style: TextStyle(color: Colors.white)),
+                title: Text(
+                  'Take a Photo',
+                  style: TextStyle(color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black),
+                ),
                 onTap: () {
                   _getImage(ImageSource.camera);
                   Navigator.pop(context);
@@ -417,22 +469,25 @@ class _ProfilePageState extends State<ProfilePage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: const Color(0xFF1A1A1A),
-          title: const Text('Edit Profile', style: TextStyle(color: Colors.white)),
+          backgroundColor: _currentTheme.cardColor,
+          title: Text(
+            'Edit Profile',
+            style: TextStyle(color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black),
+          ),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: usernameController,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
+                  style: TextStyle(color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black),
+                  decoration: InputDecoration(
                     labelText: 'Username',
-                    labelStyle: TextStyle(color: Colors.grey),
+                    labelStyle: TextStyle(color: _currentTheme.brightness == Brightness.dark ? Colors.grey : Colors.grey[700]),
                     enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey),
+                      borderSide: BorderSide(color: _currentTheme.brightness == Brightness.dark ? Colors.grey : Colors.grey[400]!),
                     ),
-                    focusedBorder: UnderlineInputBorder(
+                    focusedBorder: const UnderlineInputBorder(
                       borderSide: BorderSide(color: Color(0xFF4CAF50)),
                     ),
                   ),
@@ -440,14 +495,14 @@ class _ProfilePageState extends State<ProfilePage> {
                 const SizedBox(height: 16),
                 TextField(
                   controller: emailController,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
+                  style: TextStyle(color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black),
+                  decoration: InputDecoration(
                     labelText: 'Email',
-                    labelStyle: TextStyle(color: Colors.grey),
+                    labelStyle: TextStyle(color: _currentTheme.brightness == Brightness.dark ? Colors.grey : Colors.grey[700]),
                     enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey),
+                      borderSide: BorderSide(color: _currentTheme.brightness == Brightness.dark ? Colors.grey : Colors.grey[400]!),
                     ),
-                    focusedBorder: UnderlineInputBorder(
+                    focusedBorder: const UnderlineInputBorder(
                       borderSide: BorderSide(color: Color(0xFF4CAF50)),
                     ),
                   ),
@@ -457,7 +512,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           actions: [
             TextButton(
-              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+              child: Text('Cancel', style: TextStyle(color: _currentTheme.brightness == Brightness.dark ? Colors.grey : Colors.grey[700])),
               onPressed: () => Navigator.pop(context),
             ),
             TextButton(
@@ -469,7 +524,6 @@ class _ProfilePageState extends State<ProfilePage> {
                     email = emailController.text;
                   });
                   Navigator.pop(context);
-
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Profile updated successfully')),
                   );
@@ -486,11 +540,12 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // Show subscription options
+  // Show subscription options with all three plans
   void _showSubscriptionOptions() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1A1A1A),
+      backgroundColor: _currentTheme.cardColor,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -500,47 +555,264 @@ class _ProfilePageState extends State<ProfilePage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
+              Text(
                 'Premium Subscription',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 20),
-              ListTile(
-                title: const Text('Monthly Plan', style: TextStyle(color: Colors.white)),
-                subtitle: const Text('\$9.99/month', style: TextStyle(color: Colors.grey)),
-                trailing: ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4CAF50)),
-                  onPressed: () {
-                    setState(() {
-                      subscriptionPlan = 'Premium (Monthly)';
-                    });
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Select'),
-                ),
+
+              // Monthly Plan
+              _buildSubscriptionOption(
+                'Monthly Plan',
+                '\$9.99/month',
+                'Basic premium access',
+                    () {
+                  setState(() {
+                    subscriptionPlan = 'Premium (Monthly)';
+                  });
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Subscribed to Monthly Plan')),
+                  );
+                },
               ),
-              ListTile(
-                title: const Text('Yearly Plan', style: TextStyle(color: Colors.white)),
-                subtitle: const Text('\$99.99/year (Save 17%)', style: TextStyle(color: Colors.grey)),
-                trailing: ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4CAF50)),
-                  onPressed: () {
-                    setState(() {
-                      subscriptionPlan = 'Premium (Yearly)';
-                    });
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Select'),
-                ),
+
+              const SizedBox(height: 10),
+
+              // 3-Month Plan
+              _buildSubscriptionOption(
+                '3-Month Plan',
+                '\$24.99',
+                'Save 16% compared to monthly',
+                    () {
+                  setState(() {
+                    subscriptionPlan = 'Premium (3 Months)';
+                  });
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Subscribed to 3-Month Plan')),
+                  );
+                },
               ),
+
+              const SizedBox(height: 10),
+
+              // Yearly Plan
+              _buildSubscriptionOption(
+                'Yearly Plan',
+                '\$99.99/year',
+                'Save 17% compared to monthly',
+                    () {
+                  setState(() {
+                    subscriptionPlan = 'Premium (Yearly)';
+                  });
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Subscribed to Yearly Plan')),
+                  );
+                },
+              ),
+
+              const SizedBox(height: 20),
             ],
           ),
         );
       },
+    );
+  }
+
+  // Helper method to build subscription option card
+  Widget _buildSubscriptionOption(String title, String price, String description, VoidCallback onSelect) {
+    return Container(
+      decoration: BoxDecoration(
+        color: _currentTheme.brightness == Brightness.dark ? const Color(0xFF242424) : Colors.grey[100],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  price,
+                  style: const TextStyle(
+                    color: Color(0xFF4CAF50),
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: TextStyle(
+                    color: _currentTheme.brightness == Brightness.dark ? Colors.grey : Colors.grey[700],
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4CAF50),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            onPressed: onSelect,
+            child: const Text('Select'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Add credit options
+  void _showAddCreditOptions() {
+    final TextEditingController amountController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: _currentTheme.cardColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      isScrollControlled: true,
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            left: 20,
+            right: 20,
+            top: 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Add Credit',
+                style: TextStyle(
+                  color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: amountController,
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                style: TextStyle(color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black),
+                decoration: InputDecoration(
+                  labelText: 'Amount (\$)',
+                  labelStyle: TextStyle(color: _currentTheme.brightness == Brightness.dark ? Colors.grey : Colors.grey[700]),
+                  prefixIcon: const Icon(Icons.attach_money, color: Color(0xFF4CAF50)),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: _currentTheme.brightness == Brightness.dark ? Colors.grey : Colors.grey[400]!),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: Color(0xFF4CAF50)),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Quick amount buttons
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _quickAmountButton('\$5'),
+                  _quickAmountButton('\$10'),
+                  _quickAmountButton('\$20'),
+                  _quickAmountButton('\$50'),
+                ],
+              ),
+
+              const SizedBox(height: 20),
+
+              // Add button
+              SizedBox(
+                width: double.infinity,
+                height: 45,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4CAF50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onPressed: () {
+                    String amountText = amountController.text.trim();
+                    if (amountText.isNotEmpty) {
+                      try {
+                        double amount = double.parse(amountText);
+                        setState(() {
+                          credit += amount;
+                        });
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('\$$amount has been added to your account')),
+                        );
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Please enter a valid amount')),
+                        );
+                      }
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Please enter an amount')),
+                      );
+                    }
+                  },
+                  child: const Text('Add Credit'),
+                ),
+              ),
+              const SizedBox(height: 10),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Quick amount button for adding credit
+  Widget _quickAmountButton(String amount) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: _currentTheme.colorScheme.secondary,
+        foregroundColor: const Color(0xFF4CAF50),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+      ),
+      onPressed: () {
+        setState(() {
+          credit += double.parse(amount.substring(1));
+        });
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$amount has been added to your account')),
+        );
+      },
+      child: Text(amount),
     );
   }
 
@@ -550,21 +822,26 @@ class _ProfilePageState extends State<ProfilePage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: const Color(0xFF1A1A1A),
-          title: const Text('Delete Account', style: TextStyle(color: Colors.white)),
-          content: const Text(
+          backgroundColor: _currentTheme.cardColor,
+          title: Text(
+            'Delete Account',
+            style: TextStyle(color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black),
+          ),
+          content: Text(
             'Are you sure you want to delete your account? This action cannot be undone.',
-            style: TextStyle(color: Colors.grey),
+            style: TextStyle(color: _currentTheme.brightness == Brightness.dark ? Colors.grey : Colors.grey[700]),
           ),
           actions: [
             TextButton(
-              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: _currentTheme.brightness == Brightness.dark ? Colors.grey : Colors.grey[700]),
+              ),
               onPressed: () => Navigator.pop(context),
             ),
             TextButton(
               child: const Text('Delete', style: TextStyle(color: Colors.red)),
               onPressed: () {
-                // Handle account deletion
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Account deletion initiated')),
