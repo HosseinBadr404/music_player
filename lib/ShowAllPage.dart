@@ -18,6 +18,7 @@ class ShowAllPage extends StatefulWidget {
 }
 
 class _ShowAllPageState extends State<ShowAllPage> {
+  List<Map<String, String>> musicDataList = [];
   List<MusicCardItem> musicItems = [];
 
   @override
@@ -27,7 +28,7 @@ class _ShowAllPageState extends State<ShowAllPage> {
   }
 
   Future<void> _loadMusicFiles() async {
-    List<MusicCardItem> items = [];
+    List<Map<String, String>> dataList = [];
     String directoryPath = widget.isLocal
         ? '/storage/emulated/0/Music/musics'
         : '/storage/emulated/0/Download/dmusics';
@@ -38,19 +39,41 @@ class _ShowAllPageState extends State<ShowAllPage> {
       await for (var file in directory.list(recursive: false)) {
         if (file is File && file.path.toLowerCase().endsWith('.mp3')) {
           final fileName = file.path.split('/').last.replaceAll('.mp3', '');
-          items.add(MusicCardItem(
-            title: fileName,
-            artist: 'Unknown',
-            image: 'assets/images/c1.jpg', // Placeholder image
-            audioPath: file.path,
-          ));
+
+          // اضافه کردن داده‌ها به dataList
+          dataList.add({
+            'title': fileName,
+            'artist': 'Unknown',
+            'image': 'assets/images/c1.jpg',
+            'audioPath': file.path,
+          });
         }
       }
     }
 
     setState(() {
-      musicItems = items;
+      musicDataList = dataList;
+
+      // ایجاد آیتم‌ها با اطلاعات کامل
+      musicItems = dataList.map((data) => MusicCardItem(
+        title: data['title']!,
+        artist: data['artist']!,
+        image: data['image']!,
+        audioPath: data['audioPath']!,
+        playlist: dataList,
+      )).toList();
     });
+  }
+
+  // اضافه کردن این متد برای به‌روزرسانی UI
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (mounted) {
+      setState(() {
+        // به‌روزرسانی وضعیت نمایش
+      });
+    }
   }
 
   @override
@@ -97,8 +120,8 @@ class _ShowAllPageState extends State<ShowAllPage> {
               itemCount: musicItems.length,
               separatorBuilder: (context, index) => Container(
                 height: 1,
-                width: MediaQuery.of(context).size.width * 0.7, // عرض محدود
-                margin: EdgeInsets.symmetric(horizontal: 20), // فاصله از چپ و راست
+                width: MediaQuery.of(context).size.width * 0.7,
+                margin: EdgeInsets.symmetric(horizontal: 20),
                 color: Colors.grey.withOpacity(0.3),
               ),
               itemBuilder: (context, index) => musicItems[index],
@@ -115,6 +138,7 @@ class MusicCardItem extends StatefulWidget {
   final String artist;
   final String image;
   final String audioPath;
+  final List<Map<String, String>> playlist;
 
   const MusicCardItem({
     super.key,
@@ -122,6 +146,7 @@ class MusicCardItem extends StatefulWidget {
     required this.artist,
     required this.image,
     required this.audioPath,
+    required this.playlist,
   });
 
   @override
@@ -130,15 +155,37 @@ class MusicCardItem extends StatefulWidget {
 
 class _MusicCardItemState extends State<MusicCardItem> {
   Duration _position = Duration.zero;
+  bool _isPlaying = false;
 
   @override
   void initState() {
     super.initState();
     globalAudioPlayer.positionStream.listen((position) {
-      setState(() {
-        _position = position;
-      });
+      if (mounted) {
+        setState(() {
+          _position = position;
+        });
+      }
     });
+
+    globalAudioPlayer.playingStream.listen((playing) {
+      if (mounted) {
+        setState(() {
+          _isPlaying = playing;
+        });
+      }
+    });
+  }
+
+  // اضافه کردن این متد برای به‌روزرسانی UI
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (mounted) {
+      setState(() {
+        // به‌روزرسانی وضعیت نمایش
+      });
+    }
   }
 
   Future<void> _togglePlay() async {
@@ -148,6 +195,11 @@ class _MusicCardItemState extends State<MusicCardItem> {
       } else {
         await globalAudioPlayer.stop();
         currentAudioPath = widget.audioPath;
+
+        // به‌روزرسانی پلی‌لیست جاری
+        currentPlaylist = widget.playlist;
+        currentPlayingIndex = widget.playlist.indexWhere((item) => item['audioPath'] == widget.audioPath);
+
         await globalAudioPlayer.setFilePath(widget.audioPath);
         await globalAudioPlayer.play();
       }
@@ -165,6 +217,10 @@ class _MusicCardItemState extends State<MusicCardItem> {
 
     return GestureDetector(
       onTap: () {
+        // ذخیره پلی‌لیست فعلی
+        currentPlaylist = widget.playlist;
+        currentPlayingIndex = widget.playlist.indexWhere((item) => item['audioPath'] == widget.audioPath);
+
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -176,9 +232,16 @@ class _MusicCardItemState extends State<MusicCardItem> {
               audioPath: widget.audioPath,
               isPlaying: isPlaying,
               position: _position,
+              playlist: widget.playlist,
+              currentIndex: currentPlayingIndex,
             ),
           ),
-        );
+        ).then((_) {
+          // وقتی از PlayerPage برمی‌گردید، وضعیت را به‌روز کنید
+          if (mounted) {
+            setState(() {});
+          }
+        });
       },
       child: Padding(
         padding: EdgeInsets.symmetric(vertical: 18),

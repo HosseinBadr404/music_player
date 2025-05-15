@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'main.dart'; // اضافه کردن import
 
 class PlayerPage extends StatefulWidget {
   final AudioPlayer audioPlayer;
@@ -72,10 +73,19 @@ class _PlayerPageState extends State<PlayerPage> {
     _initializeAudio();
   }
 
+  @override
+  void dispose() {
+    // قبل از خروج از صفحه، به‌روزرسانی وضعیت جاری در برنامه
+    currentPlayingIndex = widget.currentIndex;
+    currentPlaylist = widget.playlist ?? [];
+    super.dispose();
+  }
+
   Future<void> _initializeAudio() async {
     if (widget.audioPath.isNotEmpty) {
       try {
         await widget.audioPlayer.setFilePath(widget.audioPath);
+        currentAudioPath = widget.audioPath; // به‌روزرسانی مسیر آهنگ فعلی
         await widget.audioPlayer.seek(widget.position);
         if (widget.isPlaying) {
           await widget.audioPlayer.play();
@@ -102,9 +112,14 @@ class _PlayerPageState extends State<PlayerPage> {
 
   Future<void> _playPrevious() async {
     if (widget.playlist == null || widget.currentIndex <= 0) return;
+
     final prevIndex = widget.currentIndex - 1;
     final prevTrack = widget.playlist![prevIndex];
+
     await widget.audioPlayer.stop();
+    currentAudioPath = prevTrack['audioPath']!; // به‌روزرسانی مسیر آهنگ فعلی
+    currentPlayingIndex = prevIndex; // به‌روزرسانی شاخص آهنگ جاری
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
@@ -132,9 +147,14 @@ class _PlayerPageState extends State<PlayerPage> {
       });
       return;
     }
+
     final nextIndex = widget.currentIndex + 1;
     final nextTrack = widget.playlist![nextIndex];
+
     await widget.audioPlayer.stop();
+    currentAudioPath = nextTrack['audioPath']!; // به‌روزرسانی مسیر آهنگ فعلی
+    currentPlayingIndex = nextIndex; // به‌روزرسانی شاخص آهنگ جاری
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(

@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -12,10 +11,11 @@ import 'SignIn.dart';
 import 'SignUp.dart';
 import 'ShowAllPage.dart';
 
-// پخش‌کننده مشترک برای همه صفحات
-final AudioPlayer globalAudioPlayer = AudioPlayer();
-// برای ردیابی موزیک در حال پخش
-String? currentAudioPath;
+List<Map<String, String>> currentPlaylist = [];
+int currentPlayingIndex = -1;
+AudioPlayer globalAudioPlayer = AudioPlayer();
+String currentAudioPath = '';
+
 
 void main() {
   runApp(const MusicApp());
@@ -307,11 +307,21 @@ class _HomePageState extends State<HomePage> {
                         color: Colors.white,
                       ),
                     ),
-                    Text(
-                      "show all",
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontFamily: 'Poppins',
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ShowAllPage(
+                              title: "Show All Downloaded Musics",
+                              isLocal: false,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        "Show All",
+                        style: TextStyle(color: Colors.white),
                       ),
                     ),
                   ],
@@ -399,19 +409,27 @@ class _MusicCardState extends State<MusicCard> {
       } else {
         await globalAudioPlayer.stop();
         currentAudioPath = widget.audioPath;
+
+        // به‌روزرسانی متغیرهای جهانی
+        final musicList = Provider.of<List<MusicCard>>(context, listen: false);
+        currentPlaylist = musicList
+            .map((music) => {
+          'title': music.title,
+          'artist': music.artist,
+          'image': music.image,
+          'audioPath': music.audioPath,
+        })
+            .toList();
+        currentPlayingIndex = musicList.indexWhere((music) => music.audioPath == widget.audioPath);
+
         await globalAudioPlayer.setFilePath(widget.audioPath);
         await globalAudioPlayer.play();
       }
-      if (mounted) {
-        setState(() {});
-      }
+      setState(() {});
     } catch (e) {
-      print('Error playing music: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error playing music: $e')),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error playing music')),
+      );
     }
   }
 
@@ -431,6 +449,19 @@ class _MusicCardState extends State<MusicCard> {
               GestureDetector(
                 onTap: () {
                   final musicList = Provider.of<List<MusicCard>>(context, listen: false);
+                  final playlist = musicList
+                      .map((music) => {
+                    'title': music.title,
+                    'artist': music.artist,
+                    'image': music.image,
+                    'audioPath': music.audioPath,
+                  })
+                      .toList();
+
+                  // ذخیره پلی‌لیست فعلی
+                  currentPlaylist = playlist;
+                  currentPlayingIndex = musicList.indexWhere((music) => music.audioPath == widget.audioPath);
+
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -442,18 +473,16 @@ class _MusicCardState extends State<MusicCard> {
                         audioPath: widget.audioPath,
                         isPlaying: isPlaying,
                         position: _position,
-                        playlist: musicList
-                            .map((music) => {
-                          'title': music.title,
-                          'artist': music.artist,
-                          'image': music.image,
-                          'audioPath': music.audioPath,
-                        })
-                            .toList(),
-                        currentIndex: musicList.indexWhere((music) => music.audioPath == widget.audioPath),
+                        playlist: playlist,
+                        currentIndex: currentPlayingIndex,
                       ),
                     ),
-                  );
+                  ).then((_) {
+                    // وقتی از PlayerPage برمی‌گردید، وضعیت را به‌روز کنید
+                    if (mounted) {
+                      setState(() {});
+                    }
+                  });
                 },
                 child: Padding(
                   padding: EdgeInsets.only(top: 12, left: 12, right: 12),
