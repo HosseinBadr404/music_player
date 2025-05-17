@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'MusicShopDetailPage.dart';
+import 'package:music_player/Music.dart';
 
 class MusicShopListPage extends StatefulWidget {
   final String category;
@@ -27,30 +28,20 @@ class _MusicShopListPageState extends State<MusicShopListPage> {
   }
 
   void _loadMusic() {
-    // Mock server data
-    musicList = [
-      ShopMusicCard(
-        title: 'Song 1',
-        artist: 'Artist 1',
-        image: 'assets/images/c1.jpg',
-        rating: 4.5,
-        price: 2.99,
-        isFree: false,
-        downloads: 1000,
-        category: 'ایرانی',
-      ),
-      ShopMusicCard(
-        title: 'Song 2',
-        artist: 'Artist 2',
-        image: 'assets/images/c1.jpg',
-        rating: 4.0,
-        price: 0.0,
-        isFree: true,
-        downloads: 500,
-        category: 'خارجی',
-      ),
-      // Add more mock songs
-    ].where((song) => song.category == widget.category).toList();
+    // Use the music data from our model
+    List<Music> musicData = MusicData.getMusicByCategory(widget.category);
+
+    musicList = musicData.map((music) => ShopMusicCard(
+      title: music.title,
+      artist: music.artist,
+      image: music.coverImage,
+      rating: music.rating,
+      price: music.price,
+      isFree: music.isFree,
+      downloads: music.downloads,
+      category: music.category,
+    )).toList();
+
     filteredMusicList = musicList;
   }
 

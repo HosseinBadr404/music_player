@@ -10,6 +10,7 @@ class MusicShopDetailPage extends StatefulWidget {
   final double price;
   final bool isFree;
   final int downloads;
+  // You can also add the audioBase64 parameter if you want to play the audio
 
   const MusicShopDetailPage({
     super.key,
