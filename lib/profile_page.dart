@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'payment_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key}) : super(key: key);
@@ -684,7 +685,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   // Add credit options
   void _showAddCreditOptions() {
-    final TextEditingController amountController = TextEditingController();
+    final amountController = TextEditingController();
 
     showModalBottomSheet(
       context: context,
@@ -703,7 +704,6 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 'Add Credit',
@@ -716,73 +716,62 @@ class _ProfilePageState extends State<ProfilePage> {
               const SizedBox(height: 20),
               TextField(
                 controller: amountController,
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
-                style: TextStyle(color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black),
+                keyboardType: TextInputType.number,
                 decoration: InputDecoration(
-                  labelText: 'Amount (\$)',
-                  labelStyle: TextStyle(color: _currentTheme.brightness == Brightness.dark ? Colors.grey : Colors.grey[700]),
-                  prefixIcon: const Icon(Icons.attach_money, color: Color(0xFF4CAF50)),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: _currentTheme.brightness == Brightness.dark ? Colors.grey : Colors.grey[400]!),
-                    borderRadius: BorderRadius.circular(8),
+                  labelText: 'Enter amount',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.attach_money),
+                  labelStyle: TextStyle(
+                    color: _currentTheme.brightness == Brightness.dark ? Colors.white70 : Colors.black87,
                   ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: Color(0xFF4CAF50)),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                ),
+                style: TextStyle(
+                  color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black,
                 ),
               ),
               const SizedBox(height: 20),
-
-              // Quick amount buttons
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _quickAmountButton('\$5'),
-                  _quickAmountButton('\$10'),
-                  _quickAmountButton('\$20'),
-                  _quickAmountButton('\$50'),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              // Add button
-              SizedBox(
-                width: double.infinity,
-                height: 45,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4CAF50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cancel'),
                     ),
                   ),
-                  onPressed: () {
-                    String amountText = amountController.text.trim();
-                    if (amountText.isNotEmpty) {
-                      try {
-                        double amount = double.parse(amountText);
-                        setState(() {
-                          credit += amount;
-                        });
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('\$$amount has been added to your account')),
-                        );
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Please enter a valid amount')),
-                        );
-                      }
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Please enter an amount')),
-                      );
-                    }
-                  },
-                  child: const Text('Add Credit'),
-                ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4CAF50),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      onPressed: () {
+                        final amount = double.tryParse(amountController.text);
+                        if (amount != null && amount > 0) {
+                          Navigator.pop(context);
+                          _navigateToPaymentPage(amount);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Please enter a valid amount')),
+                          );
+                        }
+                      },
+                      child: const Text('Proceed'),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 10),
             ],
@@ -791,6 +780,37 @@ class _ProfilePageState extends State<ProfilePage> {
       },
     );
   }
+
+  Future<void> _navigateToPaymentPage(double amount) async {
+    // For demo purposes, we'll use a fixed password
+    // In a real app, this would come from your authentication system
+    String userPassword = "password1234";
+
+    // Navigate to payment page
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => PaymentPage(
+          userPassword: userPassword,
+          amount: amount,
+        ),
+      ),
+    );
+
+    // Handle the payment result
+    if (result == true) {
+      setState(() {
+        credit += amount; // Update user's credit
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Successfully added \$${amount.toStringAsFixed(2)} to your account'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  }
+
 
   // Quick amount button for adding credit
   Widget _quickAmountButton(String amount) {
