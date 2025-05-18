@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
+import 'payment_page.dart';
 
 class MusicShopDetailPage extends StatefulWidget {
   final String title;
@@ -62,6 +63,19 @@ class _MusicShopDetailPageState extends State<MusicShopDetailPage> {
     setState(() {
       isDownloading = true;
     });
+
+    // Create a download progress simulation
+    double progress = 0.0;
+    const int totalSteps = 100;
+
+    for (int i = 0; i < totalSteps; i++) {
+      // Simulate file download with delays
+      await Future.delayed(Duration(milliseconds: 50));
+      setState(() {
+        progress = (i + 1) / totalSteps;
+      });
+    }
+
     // Mock download
     try {
       final downloadDir = await getDownloadsDirectory();
@@ -82,16 +96,6 @@ class _MusicShopDetailPageState extends State<MusicShopDetailPage> {
       isDownloading = false;
       isPurchased = true;
     });
-  }
-
-  void _purchaseSong() {
-    // Mock purchase
-    setState(() {
-      isPurchased = true;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Song purchased: ${widget.title}')),
-    );
   }
 
   void _submitComment() {
@@ -119,6 +123,14 @@ class _MusicShopDetailPageState extends State<MusicShopDetailPage> {
 
     return Scaffold(
       backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
       bottomNavigationBar: ClipRRect(
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(30),
@@ -288,6 +300,33 @@ class _MusicShopDetailPageState extends State<MusicShopDetailPage> {
         ),
       ),
     );
+  }
+
+  void _purchaseSong() async {
+    // Navigate to payment page and await result
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PaymentPage(
+          userPassword: "1234", // Replace with actual user password from your auth system
+          amount: widget.price,
+        ),
+      ),
+    );
+
+    // Handle payment result
+    if (result == true) {
+      // Payment was successful
+      setState(() {
+        isPurchased = true;
+        // Update UI as needed (e.g., mark as purchased)
+      });
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Purchase successful!')),
+      );
+    }
   }
 }
 
