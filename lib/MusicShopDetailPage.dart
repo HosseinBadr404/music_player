@@ -11,7 +11,6 @@ class MusicShopDetailPage extends StatefulWidget {
   final double price;
   final bool isFree;
   final int downloads;
-  // You can also add the audioBase64 parameter if you want to play the audio
 
   const MusicShopDetailPage({
     super.key,
@@ -36,7 +35,6 @@ class _MusicShopDetailPageState extends State<MusicShopDetailPage> {
   bool isPurchased = false;
   bool isDownloading = false;
   bool hasSubscription = false; // Mock subscription status
-  SortOption? _commentSortOption;
 
   @override
   void initState() {
@@ -69,20 +67,17 @@ class _MusicShopDetailPageState extends State<MusicShopDetailPage> {
     const int totalSteps = 100;
 
     for (int i = 0; i < totalSteps; i++) {
-      // Simulate file download with delays
       await Future.delayed(Duration(milliseconds: 50));
       setState(() {
         progress = (i + 1) / totalSteps;
       });
     }
 
-    // Mock download
     try {
       final downloadDir = await getDownloadsDirectory();
       final filePath = '${downloadDir?.path}/dmusics/${widget.title}.mp3';
       final file = File(filePath);
       await file.create(recursive: true);
-      // Simulate download by writing a placeholder
       await file.writeAsString('Mock audio file');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Download completed: ${widget.title}')),
@@ -98,6 +93,27 @@ class _MusicShopDetailPageState extends State<MusicShopDetailPage> {
     });
   }
 
+  void _purchaseSong() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PaymentPage(
+          userPassword: "1234",
+          amount: widget.price,
+        ),
+      ),
+    );
+
+    if (result == true) {
+      setState(() {
+        isPurchased = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Purchase successful!')),
+      );
+    }
+  }
+
   void _submitComment() {
     if (_commentController.text.isNotEmpty) {
       setState(() {
@@ -105,16 +121,6 @@ class _MusicShopDetailPageState extends State<MusicShopDetailPage> {
         _commentController.clear();
       });
     }
-  }
-
-  void _sortComments() {
-    setState(() {
-      if (_commentSortOption == SortOption.likes) {
-        comments.sort((a, b) => b.likes.compareTo(a.likes));
-      } else if (_commentSortOption == SortOption.dislikes) {
-        comments.sort((a, b) => b.dislikes.compareTo(a.dislikes));
-      }
-    });
   }
 
   @override
@@ -130,6 +136,11 @@ class _MusicShopDetailPageState extends State<MusicShopDetailPage> {
           icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
+        title: Text(
+          'Music Details',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
       ),
       bottomNavigationBar: ClipRRect(
         borderRadius: BorderRadius.only(
@@ -177,156 +188,300 @@ class _MusicShopDetailPageState extends State<MusicShopDetailPage> {
         ),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: ListView(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.asset(
-                  widget.image,
-                  height: 200,
-                  fit: BoxFit.cover,
-                ),
-              ),
-              SizedBox(height: 10),
-              Text(
-                widget.title,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              Text(
-                widget.artist,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey),
-              ),
-              Text(
-                'Rating: ${widget.rating}',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              SizedBox(height: 10),
-              Text('Rate this song:'),
-              Row(
-                children: List.generate(5, (index) {
-                  return IconButton(
-                    icon: Icon(
-                      index < userRating ? Icons.star : Icons.star_border,
-                      color: Colors.yellow,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        userRating = index + 1.0;
-                      });
-                    },
-                  );
-                }),
-              ),
-              SizedBox(height: 10),
-              if (canDownload)
-                ElevatedButton(
-                  onPressed: isDownloading ? null : _downloadSong,
-                  child: Text(isDownloading ? 'Downloading...' : 'Download'),
-                )
-              else
-                ElevatedButton(
-                  onPressed: _purchaseSong,
-                  child: Text('Purchase for \$${widget.price.toStringAsFixed(2)}'),
-                ),
-              SizedBox(height: 20),
-              TextField(
-                controller: _commentController,
-                decoration: InputDecoration(
-                  hintText: 'Write a comment...',
-                  filled: true,
-                  fillColor: Colors.grey.shade900,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Music Image with Gradient Overlay
+                Container(
+                  height: 400,
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 24),
+                  child: Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Image.asset(
+                          widget.image,
+                          height: 400,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withOpacity(0.7),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        left: 16,
+                        bottom: 16,
+                        right: 16,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.title,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              widget.artist,
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.8),
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              SizedBox(height: 10),
-              ElevatedButton(
-                onPressed: _submitComment,
-                child: Text('Submit Comment'),
-              ),
-              SizedBox(height: 10),
-              DropdownButton<SortOption>(
-                hint: Text('Sort comments by'),
-                value: _commentSortOption,
-                items: [
-                  DropdownMenuItem(
-                    value: SortOption.likes,
-                    child: Text('Likes'),
+                // Music Info Section
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  DropdownMenuItem(
-                    value: SortOption.dislikes,
-                    child: Text('Dislikes'),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Stats Row
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _buildStat(Icons.star, '${widget.rating}', 'Rating'),
+                          _buildStat(Icons.download, '${widget.downloads}', 'Downloads'),
+                          _buildStat(
+                            Icons.attach_money,
+                            widget.isFree ? 'Free' : '\$${widget.price.toStringAsFixed(2)}',
+                            'Price',
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      // User Rating (Centered)
+                      Center(
+                        child: Column(
+                          children: [
+                            const Text(
+                              'Rate this song:',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: List.generate(5, (index) {
+                                return IconButton(
+                                  icon: Icon(
+                                    index < userRating ? Icons.star : Icons.star_border,
+                                    color: Colors.yellow,
+                                    size: 28,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      userRating = index + 1.0;
+                                    });
+                                  },
+                                );
+                              }),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: isDownloading ? null : (canDownload ? _downloadSong : _purchaseSong),
+                          child: Text(
+                            isDownloading
+                                ? 'Downloading...'
+                                : (canDownload
+                                ? 'Download Now'
+                                : 'Purchase for \$${widget.price.toStringAsFixed(2)}'),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-                onChanged: (value) {
-                  setState(() {
-                    _commentSortOption = value;
-                    _sortComments();
-                  });
-                },
-              ),
-              SizedBox(height: 10),
-              ...comments.map((comment) => ListTile(
-                title: Text(comment.content),
-                subtitle: Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.thumb_up, size: 16),
-                      onPressed: () {
-                        setState(() {
-                          comment.likes++;
-                        });
-                      },
-                    ),
-                    Text('${comment.likes}'),
-                    IconButton(
-                      icon: Icon(Icons.thumb_down, size: 16),
-                      onPressed: () {
-                        setState(() {
-                          comment.dislikes++;
-                        });
-                      },
-                    ),
-                    Text('${comment.dislikes}'),
-                  ],
                 ),
-              )),
-            ],
+                const SizedBox(height: 24),
+                // Comments Section
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Comments',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Comment Input
+                      TextField(
+                        controller: _commentController,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
+                          hintText: 'Write a comment...',
+                          hintStyle: TextStyle(color: Colors.grey, fontSize: 16),
+                          filled: true,
+                          fillColor: Colors.grey.shade900,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 14,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          ElevatedButton(
+                            onPressed: _submitComment,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Color.fromRGBO(255, 255, 255, 0.07),
+                              foregroundColor: Colors.white,
+                            ),
+                            child: const Text('Submit Comment'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      // Comments List with Separators
+                      comments.isEmpty
+                          ? const Center(
+                        child: Text(
+                          'No comments yet',
+                          style: TextStyle(color: Colors.grey, fontSize: 16),
+                        ),
+                      )
+                          : ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: comments.length,
+                        separatorBuilder: (_, __) => Container(
+                          height: 1,
+                          width: MediaQuery.of(context).size.width * 0.7,
+                          margin: const EdgeInsets.symmetric(horizontal: 20),
+                          color: Colors.grey.withOpacity(0.3),
+                        ),
+                        itemBuilder: (_, index) => ListTile(
+                          title: Text(
+                            comments[index].content,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.normal,
+                            ),
+                          ),
+                          subtitle: Row(
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.thumb_up, size: 16, color: Colors.white),
+                                onPressed: () {
+                                  setState(() {
+                                    comments[index].likes++;
+                                  });
+                                },
+                              ),
+                              Text(
+                                '${comments[index].likes}',
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.thumb_down, size: 16, color: Colors.white),
+                                onPressed: () {
+                                  setState(() {
+                                    comments[index].dislikes++;
+                                  });
+                                },
+                              ),
+                              Text(
+                                '${comments[index].dislikes}',
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  void _purchaseSong() async {
-    // Navigate to payment page and await result
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => PaymentPage(
-          userPassword: "1234", // Replace with actual user password from your auth system
-          amount: widget.price,
+  Widget _buildStat(IconData icon, String value, String label) {
+    return Column(
+      children: [
+        Icon(icon, color: Colors.grey, size: 24),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-      ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.grey[400],
+            fontSize: 12,
+          ),
+        ),
+      ],
     );
-
-    // Handle payment result
-    if (result == true) {
-      // Payment was successful
-      setState(() {
-        isPurchased = true;
-        // Update UI as needed (e.g., mark as purchased)
-      });
-
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Purchase successful!')),
-      );
-    }
   }
 }
 
@@ -337,4 +492,3 @@ class Comment {
 
   Comment({required this.content, required this.likes, required this.dislikes});
 }
-enum SortOption { likes, dislikes }
