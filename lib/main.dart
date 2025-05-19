@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_media_metadata/flutter_media_metadata.dart';
 import 'package:provider/provider.dart';
 import 'audio_player_model.dart';
 import 'PlayerPage.dart';
@@ -64,11 +65,43 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   List<MusicCard> localMusics = [];
   List<MusicCard> downloadedMusics = [];
+  List<MusicCard> filteredMusics = [];
+  TextEditingController searchController = TextEditingController();
+  bool isSearching = false;
 
   @override
   void initState() {
     super.initState();
     _requestPermissionsAndLoadMusic();
+    searchController.addListener(() {
+      filterMusic(searchController.text);
+    });
+  }
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
+  void filterMusic(String query) {
+    setState(() {
+      isSearching = query.isNotEmpty;
+      if (isSearching) {
+        filteredMusics = [];
+        for (var music in localMusics) {
+          if (music.title.toLowerCase().contains(query.toLowerCase()) ||
+              music.artist.toLowerCase().contains(query.toLowerCase())) {
+            filteredMusics.add(music);
+          }
+        }
+        for (var music in downloadedMusics) {
+          if (music.title.toLowerCase().contains(query.toLowerCase()) ||
+              music.artist.toLowerCase().contains(query.toLowerCase())) {
+            filteredMusics.add(music);
+          }
+        }
+      }
+    });
   }
 
   Future<void> _requestPermissionsAndLoadMusic() async {
@@ -115,11 +148,28 @@ class _HomePageState extends State<HomePage> {
     final musicCards = <MusicCard>[];
     await for (final file in dir.list(recursive: false)) {
       if (file is File && file.path.toLowerCase().endsWith('.mp3')) {
-        final fileName = file.path.split('/').last.replaceAll('.mp3', '');
+        String title = 'Unknown';
+        String artist = 'Unknown';
+        String image = 'assets/images/c1.jpg';
+        try {
+          final metadata = await MetadataRetriever.fromFile(File(file.path));
+          title = metadata.trackName ?? file.path.split('/').last.replaceAll('.mp3', '');
+          artist = metadata.trackArtistNames?.join(', ') ?? 'Unknown';
+          if (metadata.albumArt != null) {
+            final tempDir = await getTemporaryDirectory();
+            final coverFile = File('${tempDir.path}/${title.replaceAll(' ', '_')}_cover.jpg');
+            await coverFile.writeAsBytes(metadata.albumArt!);
+            image = coverFile.path;
+          }
+        } catch (e) {
+          print('Error reading metadata: $e');
+          title = file.path.split('/').last.replaceAll('.mp3', '');
+        }
+
         musicCards.add(MusicCard(
-          title: fileName,
-          artist: 'Unknown',
-          image: 'assets/images/c1.jpg',
+          title: title,
+          artist: artist,
+          image: image,
           audioPath: file.path,
           index: musicCards.length,
           musicList: musicCards,
@@ -153,9 +203,15 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 12),
               _buildSearchField(),
               const SizedBox(height: 20),
-              _buildSection(context, "Local Musics", localMusics, true),
-              const SizedBox(height: 24),
-              _buildSection(context, "Downloaded Musics", downloadedMusics, false),
+              isSearching
+                  ? _buildSearchResults()
+                  : Column(
+                children: [
+                  _buildSection(context, "Local Musics", localMusics, true),
+                  const SizedBox(height: 15),
+                  _buildSection(context, "Downloaded Musics", downloadedMusics, false),
+                ],
+              ),
             ],
           ),
         ),
@@ -197,6 +253,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildSearchField() {
     return TextField(
+      controller: searchController,
       style: const TextStyle(color: Colors.white, fontFamily: 'Poppins'),
       decoration: InputDecoration(
         hintText: 'type a music name ...',
@@ -209,6 +266,49 @@ class _HomePageState extends State<HomePage> {
           borderSide: BorderSide.none,
         ),
       ),
+    );
+  }
+
+  Widget _buildSearchResults() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 12),
+        Text(
+          "Search Result",
+          style: const TextStyle(
+            fontFamily: 'Lora',
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 12),
+        filteredMusics.isEmpty
+            ? Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 30),
+            child: Text(
+              'No music found',
+              style: TextStyle(color: Colors.grey, fontFamily: 'Poppins'),
+            ),
+          ),
+        )
+            : GridView.builder(
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            childAspectRatio: 0.7,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+          ),
+          itemCount: filteredMusics.length,
+          itemBuilder: (context, index) {
+            return filteredMusics[index];
+          },
+        ),
+      ],
     );
   }
 
@@ -334,8 +434,15 @@ class MusicCard extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 12, left: 12, right: 12),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(25),
-                    child: Image.asset(
+                    child: image.startsWith('assets/')
+                        ? Image.asset(
                       image,
+                      height: 150,
+                      width: double.infinity,
+                      fit: BoxFit.fill,
+                    )
+                        : Image.file(
+                      File(image),
                       height: 150,
                       width: double.infinity,
                       fit: BoxFit.fill,

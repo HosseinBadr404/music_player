@@ -2,7 +2,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'audio_player_model.dart';
+import 'package:flutter_media_metadata/flutter_media_metadata.dart';
 import 'PlayerPage.dart';
+import 'package:path_provider/path_provider.dart';
 
 class ShowAllPage extends StatefulWidget {
   final String title;
@@ -20,11 +22,31 @@ class ShowAllPage extends StatefulWidget {
 
 class _ShowAllPageState extends State<ShowAllPage> {
   List<MusicCardItem> musicItems = [];
+  List<MusicCardItem> originalMusicItems = [];
+  int _sortState = 0;
 
   @override
   void initState() {
     super.initState();
     _loadMusicFiles();
+  }
+
+  void _sortMusicItems() {
+    setState(() {
+      _sortState = (_sortState + 1) % 3;
+
+      switch (_sortState) {
+        case 0:
+          musicItems = List.from(originalMusicItems);
+          break;
+        case 1:
+          musicItems.sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
+          break;
+        case 2:
+          musicItems.sort((a, b) => b.title.toLowerCase().compareTo(a.title.toLowerCase()));
+          break;
+      }
+    });
   }
 
   Future<void> _loadMusicFiles() async {
@@ -37,11 +59,29 @@ class _ShowAllPageState extends State<ShowAllPage> {
     if (await directory.exists()) {
       await for (final file in directory.list(recursive: false)) {
         if (file is File && file.path.toLowerCase().endsWith('.mp3')) {
-          final fileName = file.path.split('/').last.replaceAll('.mp3', '');
+          String title = 'Unknown';
+          String artist = 'Unknown';
+          String image = 'assets/images/c1.jpg'; // پیش‌فرض اگر تصویری پیدا نشود
+
+          try {
+            final metadata = await MetadataRetriever.fromFile(File(file.path));
+            title = metadata.trackName ?? file.path.split('/').last.replaceAll('.mp3', '');
+            artist = metadata.trackArtistNames?.join(', ') ?? 'Unknown';
+            if (metadata.albumArt != null) {
+              final tempDir = await getTemporaryDirectory();
+              final coverFile = File('${tempDir.path}/${title.replaceAll(' ', '_')}_cover.jpg');
+              await coverFile.writeAsBytes(metadata.albumArt!);
+              image = coverFile.path;
+            }
+          } catch (e) {
+            print('Error reading metadata: $e');
+            title = file.path.split('/').last.replaceAll('.mp3', '');
+          }
+
           dataList.add({
-            'title': fileName,
-            'artist': 'Unknown',
-            'image': 'assets/images/c1.jpg',
+            'title': title,
+            'artist': artist,
+            'image': image,
             'audioPath': file.path,
           });
         }
@@ -56,7 +96,17 @@ class _ShowAllPageState extends State<ShowAllPage> {
         audioPath: data['audioPath']!,
         playlist: dataList,
       )).toList();
+      originalMusicItems = List.from(musicItems);
     });
+  }
+
+  IconData _getSortIcon() {
+    switch (_sortState) {
+      case 0: return Icons.sort_rounded;
+      case 1: return Icons.arrow_downward;
+      case 2: return Icons.arrow_upward;
+      default: return Icons.sort_rounded;
+    }
   }
 
   @override
@@ -73,8 +123,8 @@ class _ShowAllPageState extends State<ShowAllPage> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.sort_rounded, color: Colors.white),
-            onPressed: () {},
+            icon: Icon(_getSortIcon(), color: Colors.white),
+            onPressed: _sortMusicItems,
           ),
         ],
       ),
@@ -97,17 +147,20 @@ class _ShowAllPageState extends State<ShowAllPage> {
                 ),
               ),
             )
-                : ListView.separated(
-              padding: const EdgeInsets.all(15),
-              scrollDirection: Axis.vertical,
-              itemCount: musicItems.length,
-              separatorBuilder: (_, __) => Container(
-                height: 1,
-                width: MediaQuery.of(context).size.width * 0.7,
-                margin: const EdgeInsets.symmetric(horizontal: 20),
-                color: Colors.grey.withOpacity(0.3),
+                : ClipRRect(
+              borderRadius: BorderRadius.circular(28),
+              child: ListView.separated(
+                padding: const EdgeInsets.all(15),
+                scrollDirection: Axis.vertical,
+                itemCount: musicItems.length,
+                separatorBuilder: (_, __) => Container(
+                  height: 1,
+                  width: MediaQuery.of(context).size.width * 0.7,
+                  margin: const EdgeInsets.symmetric(horizontal: 20),
+                  color: Colors.grey.withOpacity(0.3),
+                ),
+                itemBuilder: (_, index) => musicItems[index],
               ),
-              itemBuilder: (_, index) => musicItems[index],
             ),
           ),
         ),
@@ -158,8 +211,15 @@ class MusicCardItem extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(20),
-              child: Image.asset(
+              child: image.startsWith('assets/')
+                  ? Image.asset(
                 image,
+                width: 80,
+                height: 80,
+                fit: BoxFit.cover,
+              )
+                  : Image.file(
+                File(image),
                 width: 80,
                 height: 80,
                 fit: BoxFit.cover,

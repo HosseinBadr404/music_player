@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'audio_player_model.dart';
+import 'dart:io';
 
 class PlayerPage extends StatelessWidget {
   final List<Map<String, String>> playlist;
@@ -51,69 +52,88 @@ class PlayerPage extends StatelessWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: Image.asset(
-                currentTrack['image']!,
-                width: double.infinity,
-                height: 370,
-                fit: BoxFit.cover,
-              ),
-            ),
-            const SizedBox(height: 35),
-            Text(
-              currentTrack['title']!,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 15),
-            Text(
-              currentTrack['artist']!,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey),
-            ),
-            const SizedBox(height: 25),
-            Text(
-              "${audioModel.position.inMinutes}:${(audioModel.position.inSeconds % 60).toString().padLeft(2, '0')} / "
-                  "${audioModel.duration.inMinutes}:${(audioModel.duration.inSeconds % 60).toString().padLeft(2, '0')}",
-              style: const TextStyle(color: Colors.white),
-            ),
-            const SizedBox(height: 20),
-            Slider(
-              value: audioModel.position.inSeconds.toDouble(),
-              max: audioModel.duration.inSeconds.toDouble() > 0 ? audioModel.duration.inSeconds.toDouble() : 1.0,
-              onChanged: (value) => audioModel.seekTo(Duration(seconds: value.toInt())),
-              activeColor: Colors.white,
-              inactiveColor: Colors.grey,
-            ),
-            const Spacer(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.skip_previous, size: 40, color: Colors.white),
-                  onPressed: audioModel.currentIndex > 0 ? audioModel.playPrevious : null,
-                ),
-                const SizedBox(width: 20),
-                IconButton(
-                  icon: Icon(
-                    audioModel.isPlaying ? Icons.pause_circle_filled : Icons.play_circle_fill,
-                    size: 80,
-                    color: Colors.white,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Column(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: currentTrack['image']!.startsWith('assets/')
+                            ? Image.asset(
+                          currentTrack['image']!,
+                          width: double.infinity,
+                          height: 370,
+                          fit: BoxFit.cover,
+                        )
+                            : Image.file(
+                          File(currentTrack['image']!),
+                          width: double.infinity,
+                          height: 370,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      const SizedBox(height: 35),
+                      Text(
+                        currentTrack['title']!,
+                        style: Theme.of(context).textTheme.titleLarge,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 15),
+                      Text(
+                        currentTrack['artist']!,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey),
+                      ),
+                      const SizedBox(height: 25),
+                    ],
                   ),
-                  onPressed: audioModel.togglePlayPause,
                 ),
-                const SizedBox(width: 20),
-                IconButton(
-                  icon: const Icon(Icons.skip_next, size: 40, color: Colors.white),
-                  onPressed: audioModel.currentIndex < playlist.length - 1 ? audioModel.playNext : null,
-                ),
-              ],
-            ),
-            const SizedBox(height: 80),
-          ],
+              ),
+              Text(
+                "${audioModel.position.inMinutes}:${(audioModel.position.inSeconds % 60).toString().padLeft(2, '0')} / "
+                    "${audioModel.duration.inMinutes}:${(audioModel.duration.inSeconds % 60).toString().padLeft(2, '0')}",
+                style: const TextStyle(color: Colors.white),
+              ),
+              const SizedBox(height: 10),
+              Slider(
+                value: audioModel.position.inSeconds.toDouble(),
+                max: audioModel.duration.inSeconds.toDouble() > 0 ? audioModel.duration.inSeconds.toDouble() : 1.0,
+                onChanged: (value) => audioModel.seekTo(Duration(seconds: value.toInt())),
+                activeColor: Colors.white,
+                inactiveColor: Colors.grey,
+              ),
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.skip_previous, size: 40, color: Colors.white),
+                    onPressed: audioModel.currentIndex > 0 ? audioModel.playPrevious : null,
+                  ),
+                  const SizedBox(width: 20),
+                  IconButton(
+                    icon: Icon(
+                      audioModel.isPlaying ? Icons.pause_circle_filled : Icons.play_circle_fill,
+                      size: 80,
+                      color: Colors.white,
+                    ),
+                    onPressed: audioModel.togglePlayPause,
+                  ),
+                  const SizedBox(width: 20),
+                  IconButton(
+                    icon: const Icon(Icons.skip_next, size: 40, color: Colors.white),
+                    onPressed: audioModel.currentIndex < playlist.length - 1 ? audioModel.playNext : null,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
     );

@@ -18,7 +18,7 @@ class _MusicShopListPageState extends State<MusicShopListPage> {
   List<ShopMusicCard> musicList = [];
   List<ShopMusicCard> filteredMusicList = [];
   SortOption? _sortOption;
-  bool hasSubscription = false; // Mock subscription status
+  bool hasSubscription = false;
 
   @override
   void initState() {
@@ -28,7 +28,6 @@ class _MusicShopListPageState extends State<MusicShopListPage> {
   }
 
   void _loadMusic() {
-    // Use the music data from our model
     List<Music> musicData = MusicData.getMusicByCategory(widget.category);
 
     musicList = musicData.map((music) => ShopMusicCard(
@@ -83,14 +82,14 @@ class _MusicShopListPageState extends State<MusicShopListPage> {
     return Scaffold(
       backgroundColor: Colors.black,
       bottomNavigationBar: ClipRRect(
-        borderRadius: BorderRadius.only(
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(30),
           topRight: Radius.circular(30),
         ),
         child: Stack(
           children: [
             BottomNavigationBar(
-              backgroundColor: Color.fromRGBO(255, 255, 255, 0.07),
+              backgroundColor: const Color.fromRGBO(255, 255, 255, 0.07),
               selectedItemColor: Colors.white,
               unselectedItemColor: Colors.grey,
               iconSize: 28,
@@ -129,57 +128,123 @@ class _MusicShopListPageState extends State<MusicShopListPage> {
       ),
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextField(
-                controller: _searchController,
-                style: TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  hintText: 'Search music...',
-                  hintStyle: TextStyle(color: Colors.grey),
-                  prefixIcon: Icon(Icons.search, color: Colors.white),
-                  filled: true,
-                  fillColor: Colors.grey.shade900,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(36),
-                    borderSide: BorderSide.none,
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  Positioned(
+                    left: 0,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () => Navigator.pop(context),
+                    ),
                   ),
-                ),
-              ),
-              SizedBox(height: 10),
-              DropdownButton<SortOption>(
-                hint: Text('Sort by'),
-                value: _sortOption,
-                items: [
-                  DropdownMenuItem(
-                    value: SortOption.rating,
-                    child: Text('Rating'),
-                  ),
-                  DropdownMenuItem(
-                    value: SortOption.price,
-                    child: Text('Price'),
-                  ),
-                  DropdownMenuItem(
-                    value: SortOption.downloads,
-                    child: Text('Downloads'),
+                  Center(
+                    child: Text(
+                      '${widget.category} Musics',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ],
-                onChanged: (value) {
-                  setState(() {
-                    _sortOption = value;
-                    _sortMusic();
-                  });
-                },
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 30),
+
+              Row(
+                children: [
+                  Expanded(
+                    flex: 80,
+                    child: Container(
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: TextField(
+                        controller: _searchController,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: const InputDecoration(
+                          hintText: 'Search...',
+                          hintStyle: TextStyle(color: Colors.grey , fontSize: 17),
+                          prefixIcon: Icon(Icons.search, color: Colors.grey),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(vertical: 15),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Sort button (20% width)
+                  Expanded(
+                    flex: 20,
+                    child: Container(
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: PopupMenuButton<SortOption>(
+                        icon: const Icon(Icons.sort, color: Colors.white),
+                        offset: const Offset(0, 50),
+                        color: Colors.grey[900],
+                        onSelected: (SortOption option) {
+                          setState(() {
+                            _sortOption = option;
+                            _sortMusic();
+                          });
+                        },
+                        itemBuilder: (BuildContext context) => <PopupMenuEntry<SortOption>>[
+                          const PopupMenuItem<SortOption>(
+                            value: SortOption.rating,
+                            child: Text('Rating', style: TextStyle(color: Colors.white)),
+                          ),
+                          const PopupMenuItem<SortOption>(
+                            value: SortOption.price,
+                            child: Text('Price', style: TextStyle(color: Colors.white)),
+                          ),
+                          const PopupMenuItem<SortOption>(
+                            value: SortOption.downloads,
+                            child: Text('Downloads', style: TextStyle(color: Colors.white)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+
               Expanded(
-                child: filteredMusicList.isEmpty
-                    ? Center(child: Text('No music found', style: TextStyle(color: Colors.grey)))
-                    : ListView.separated(
+                child: ListView.separated(
                   itemCount: filteredMusicList.length,
-                  separatorBuilder: (context, index) => SizedBox(height: 10),
-                  itemBuilder: (context, index) => filteredMusicList[index],
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => MusicShopDetailPage(
+                              title: filteredMusicList[index].title,
+                              artist: filteredMusicList[index].artist,
+                              image: filteredMusicList[index].image,
+                              rating: filteredMusicList[index].rating,
+                              price: filteredMusicList[index].price,
+                              isFree: filteredMusicList[index].isFree,
+                              downloads: filteredMusicList[index].downloads,
+                            ),
+                          ),
+                        );
+                      },
+                      child: filteredMusicList[index],
+                    );
+                  },
                 ),
               ),
             ],
@@ -190,7 +255,7 @@ class _MusicShopListPageState extends State<MusicShopListPage> {
   }
 }
 
-class ShopMusicCard extends StatelessWidget {
+  class ShopMusicCard extends StatelessWidget {
   final String title;
   final String artist;
   final String image;
@@ -232,23 +297,23 @@ class ShopMusicCard extends StatelessWidget {
         );
       },
       child: Container(
-        padding: EdgeInsets.all(10),
+        padding: EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: Colors.grey.shade900,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(18),
         ),
         child: Row(
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(15),
               child: Image.asset(
                 image,
-                width: 60,
-                height: 60,
+                width: 78,
+                height: 78,
                 fit: BoxFit.cover,
               ),
             ),
-            SizedBox(width: 10),
+            SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

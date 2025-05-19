@@ -15,10 +15,10 @@ class _MusicShopPageState extends State<MusicShopPage> {
   int _selectedIndex = 1;
 
   final List<Map<String, String>> categories = [
-    {'name': 'CLASSIC', 'image': 'assets/images/c1.jpg'},
-    {'name': 'POP', 'image': 'assets/images/c1.jpg'},
-    {'name': 'RAP', 'image': 'assets/images/c1.jpg'},
-    {'name': 'ROCK', 'image': 'assets/images/c1.jpg'},
+    {'name': 'CLASSIC', 'image': 'assets/images/classic-category.jpg'},
+    {'name': 'POP', 'image': 'assets/images/pop-category.jpg'},
+    {'name': 'RAP', 'image': 'assets/images/rap-category.jpg'},
+    {'name': 'ROCK', 'image': 'assets/images/rock-category.jpg'},
   ];
 
   @override
@@ -107,7 +107,7 @@ class _MusicShopPageState extends State<MusicShopPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const ProfilePage(), // Changed to ProfilePage
+                              builder: (context) => const ProfilePage(),
                             ),
                           );
                         } else {
