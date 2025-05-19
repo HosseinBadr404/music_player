@@ -575,7 +575,6 @@ class _ProfilePageState extends State<ProfilePage> {
                   setState(() {
                     subscriptionPlan = 'Premium (Monthly)';
                   });
-                  Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Subscribed to Monthly Plan')),
                   );
@@ -593,7 +592,6 @@ class _ProfilePageState extends State<ProfilePage> {
                   setState(() {
                     subscriptionPlan = 'Premium (3 Months)';
                   });
-                  Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Subscribed to 3-Month Plan')),
                   );
@@ -611,7 +609,6 @@ class _ProfilePageState extends State<ProfilePage> {
                   setState(() {
                     subscriptionPlan = 'Premium (Yearly)';
                   });
-                  Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Subscribed to Yearly Plan')),
                   );
@@ -628,6 +625,9 @@ class _ProfilePageState extends State<ProfilePage> {
 
   // Helper method to build subscription option card
   Widget _buildSubscriptionOption(String title, String price, String description, VoidCallback onSelect) {
+    // Extract the numeric value from the price string
+    double amount = double.tryParse(price.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0.0;
+
     return Container(
       decoration: BoxDecoration(
         color: _currentTheme.brightness == Brightness.dark ? const Color(0xFF242424) : Colors.grey[100],
@@ -675,7 +675,10 @@ class _ProfilePageState extends State<ProfilePage> {
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            onPressed: onSelect,
+            onPressed: () {
+              _navigateToPaymentPage(amount); // Navigate to payment with the plan amount
+              onSelect(); // Original callback if needed
+            },
             child: const Text('Select'),
           ),
         ],
