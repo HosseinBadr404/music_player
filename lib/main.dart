@@ -202,13 +202,13 @@ class _HomePageState extends State<HomePage> {
               ),
               const SizedBox(height: 12),
               _buildSearchField(),
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
               isSearching
                   ? _buildSearchResults()
                   : Column(
                 children: [
                   _buildSection(context, "Local Musics", localMusics, true),
-                  const SizedBox(height: 15),
+                  const SizedBox(height: 10),
                   _buildSection(context, "Downloaded Musics", downloadedMusics, false),
                 ],
               ),
@@ -222,8 +222,8 @@ class _HomePageState extends State<HomePage> {
   Widget _buildBottomNavigationBar(BuildContext context) {
     return ClipRRect(
       borderRadius: const BorderRadius.only(
-        topLeft: Radius.circular(30),
-        topRight: Radius.circular(30),
+        topLeft: Radius.circular(5),
+        topRight: Radius.circular(5),
       ),
       child: BottomNavigationBar(
         backgroundColor: const Color.fromRGBO(255, 255, 255, 0.07),
@@ -340,7 +340,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 0),
         SizedBox(
           height: 255,
           child: musics.isEmpty

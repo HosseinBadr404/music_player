@@ -46,94 +46,173 @@ class PlayerPage extends StatelessWidget {
     }
 
     return Scaffold(
+
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text(currentTrack['title']!),
+        title: Text(
+          currentTrack['title']!,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  child: Column(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(20),
-                        child: currentTrack['image']!.startsWith('assets/')
-                            ? Image.asset(
-                          currentTrack['image']!,
-                          width: double.infinity,
-                          height: 370,
-                          fit: BoxFit.cover,
-                        )
-                            : Image.file(
-                          File(currentTrack['image']!),
-                          width: double.infinity,
-                          height: 370,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      const SizedBox(height: 35),
-                      Text(
-                        currentTrack['title']!,
-                        style: Theme.of(context).textTheme.titleLarge,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 15),
-                      Text(
-                        currentTrack['artist']!,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey),
-                      ),
-                      const SizedBox(height: 25),
-                    ],
+      body: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        child: Column(
+          children: [
+            // Album art with stylish container
+            const SizedBox(height: 35),
+            Container(
+              margin: const EdgeInsets.only(top: 10, bottom: 20),
+              height: 350,
+              width: 350,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(140),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.white.withOpacity(0.1),
+                    blurRadius: 30,
+                    spreadRadius: 5,
                   ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: currentTrack['image']!.startsWith('assets/')
+                    ? Image.asset(
+                  currentTrack['image']!,
+                  fit: BoxFit.cover,
+                )
+                    : Image.file(
+                  File(currentTrack['image']!),
+                  fit: BoxFit.cover,
                 ),
               ),
-              Text(
-                "${audioModel.position.inMinutes}:${(audioModel.position.inSeconds % 60).toString().padLeft(2, '0')} / "
-                    "${audioModel.duration.inMinutes}:${(audioModel.duration.inSeconds % 60).toString().padLeft(2, '0')}",
-                style: const TextStyle(color: Colors.white),
+            ),
+
+            const SizedBox(height: 5),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                currentTrack['title']!,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                ),
+                textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 10),
-              Slider(
-                value: audioModel.position.inSeconds.toDouble(),
-                max: audioModel.duration.inSeconds.toDouble() > 0 ? audioModel.duration.inSeconds.toDouble() : 1.0,
-                onChanged: (value) => audioModel.seekTo(Duration(seconds: value.toInt())),
-                activeColor: Colors.white,
-                inactiveColor: Colors.grey,
+            ),
+            Text(
+              currentTrack['artist']!,
+              style: TextStyle(
+                color: Colors.grey[400],
+                fontSize: 16,
               ),
-              const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+            ),
+            const SizedBox(height: 40),
+
+            // Progress bar and timing
+            Padding(
+              padding: const EdgeInsets.only(top: 10,right: 15,bottom: 25,left: 15),
+              child: Column(
                 children: [
+                  SliderTheme(
+                    data: SliderThemeData(
+                      trackHeight: 2,
+                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
+                      overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
+                      thumbColor: Colors.white,
+                      activeTrackColor: Colors.white,
+                      inactiveTrackColor: Colors.grey.shade800,
+                      overlayColor: Colors.white.withOpacity(0.1),
+                    ),
+                    child: Slider(
+                      value: audioModel.position.inSeconds.toDouble(),
+                      max: audioModel.duration.inSeconds.toDouble() > 0 ? audioModel.duration.inSeconds.toDouble() : 1.0,
+                      onChanged: (value) => audioModel.seekTo(Duration(seconds: value.toInt())),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "${audioModel.position.inMinutes}:${(audioModel.position.inSeconds % 60).toString().padLeft(2, '0')}",
+                          style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                        ),
+                        Text(
+                          "${audioModel.duration.inMinutes}:${(audioModel.duration.inSeconds % 60).toString().padLeft(2, '0')}",
+                          style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Spacer to push controls to bottom
+            const SizedBox(height: 25),
+
+            // Control buttons with modern design
+            Container(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  // Previous button
                   IconButton(
-                    icon: const Icon(Icons.skip_previous, size: 40, color: Colors.white),
+                    icon: const Icon(Icons.skip_previous_rounded, color: Colors.white, size: 32),
                     onPressed: audioModel.currentIndex > 0 ? audioModel.playPrevious : null,
                   ),
-                  const SizedBox(width: 20),
-                  IconButton(
-                    icon: Icon(
-                      audioModel.isPlaying ? Icons.pause_circle_filled : Icons.play_circle_fill,
-                      size: 80,
-                      color: Colors.white,
+
+                  // Play/Pause button
+                  Container(
+                    width: 65,
+                    height: 65,
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.grey.shade200, Colors.white],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.white.withOpacity(0.2),
+                          blurRadius: 10,
+                          spreadRadius: 1,
+                        ),
+                      ],
                     ),
-                    onPressed: audioModel.togglePlayPause,
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      icon: Icon(
+                        audioModel.isPlaying
+                            ? Icons.pause_rounded
+                            : Icons.play_arrow_rounded,
+                        size: 40,
+                        color: Colors.black,
+                      ),
+                      onPressed: audioModel.togglePlayPause,
+                    ),
                   ),
-                  const SizedBox(width: 20),
+
+                  // Next button
                   IconButton(
-                    icon: const Icon(Icons.skip_next, size: 40, color: Colors.white),
+                    icon: const Icon(Icons.skip_next_rounded, color: Colors.white, size: 32),
                     onPressed: audioModel.currentIndex < playlist.length - 1 ? audioModel.playNext : null,
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

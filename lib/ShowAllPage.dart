@@ -61,7 +61,7 @@ class _ShowAllPageState extends State<ShowAllPage> {
         if (file is File && file.path.toLowerCase().endsWith('.mp3')) {
           String title = 'Unknown';
           String artist = 'Unknown';
-          String image = 'assets/images/c1.jpg'; // پیش‌فرض اگر تصویری پیدا نشود
+          String image = 'assets/images/c1.jpg';
 
           try {
             final metadata = await MetadataRetriever.fromFile(File(file.path));
