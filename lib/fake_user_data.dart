@@ -15,7 +15,6 @@ class User {
 }
 
 class FakeUserData {
-  // لیست کاربران فیک
   static List<User> users = [
     User(
       name: 'Ali Rezaei',

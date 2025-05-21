@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'payment_page.dart';
+import 'fake_user_data.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key}) : super(key: key);
@@ -11,9 +12,8 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  // User data
-  String username = 'JohnDoe';
-  String email = 'john.doe@example.com';
+  String username = '';
+  String email = '';
   String subscriptionPlan = 'Standard Plan';
   double credit = 25.60;
   File? _profileImage;
@@ -26,6 +26,11 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
+    if (FakeUserData.currentUser != null) {
+      username = FakeUserData.currentUser!.name;
+      email = FakeUserData.currentUser!.email;
+      credit = FakeUserData.currentUser!.balance;
+    }
     _updateTheme();
   }
 
