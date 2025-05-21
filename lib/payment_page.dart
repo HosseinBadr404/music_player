@@ -46,7 +46,7 @@ class _PaymentPageState extends State<PaymentPage> {
           // Payment failed
           setState(() {
             _isProcessing = false;
-            _errorMessage = "رمز وارد شده اشتباه است";
+            _errorMessage = "Incorrect PIN entered";
           });
         }
       });
@@ -58,14 +58,14 @@ class _PaymentPageState extends State<PaymentPage> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text("پرداخت موفق", textAlign: TextAlign.center),
+        title: const Text("Payment Successful", textAlign: TextAlign.center),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(Icons.check_circle, color: Colors.green, size: 60),
             const SizedBox(height: 20),
             Text(
-              "پرداخت به مبلغ ${widget.amount} تومان با موفقیت انجام شد",
+              "Payment of \$${widget.amount} was completed successfully",
               textAlign: TextAlign.center,
             ),
           ],
@@ -76,7 +76,7 @@ class _PaymentPageState extends State<PaymentPage> {
               Navigator.of(context).pop();
               Navigator.of(context).pop(true); // Return success to previous page
             },
-            child: const Text("تایید"),
+            child: const Text("OK"),
           ),
         ],
       ),
@@ -87,11 +87,11 @@ class _PaymentPageState extends State<PaymentPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("صفحه پرداخت"),
+        title: const Text("Payment Page"),
         centerTitle: true,
       ),
       body: Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: TextDirection.ltr,
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Form(
@@ -109,12 +109,12 @@ class _PaymentPageState extends State<PaymentPage> {
                   child: Column(
                     children: [
                       const Text(
-                        "مبلغ قابل پرداخت:",
+                        "Amount to Pay:",
                         style: TextStyle(fontSize: 16),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        "${widget.amount}\$ ",
+                        "\$${widget.amount}",
                         style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
@@ -131,7 +131,7 @@ class _PaymentPageState extends State<PaymentPage> {
                 TextFormField(
                   controller: _cardNumberController,
                   decoration: const InputDecoration(
-                    labelText: "شماره کارت",
+                    labelText: "Card Number",
                     hintText: "---- ---- ---- ----",
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.credit_card),
@@ -144,10 +144,10 @@ class _PaymentPageState extends State<PaymentPage> {
                   ],
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return "لطفا شماره کارت را وارد کنید";
+                      return "Please enter card number";
                     }
                     if (value.replaceAll(' ', '').length != 16) {
-                      return "شماره کارت باید 16 رقم باشد";
+                      return "Card number must be 16 digits";
                     }
                     return null;
                   },
@@ -159,7 +159,7 @@ class _PaymentPageState extends State<PaymentPage> {
                 TextFormField(
                   controller: _pinController,
                   decoration: const InputDecoration(
-                    labelText: "رمز کارت",
+                    labelText: "Card PIN",
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.lock),
                   ),
@@ -170,7 +170,7 @@ class _PaymentPageState extends State<PaymentPage> {
                   ],
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return "لطفا رمز کارت را وارد کنید";
+                      return "Please enter card PIN";
                     }
                     return null;
                   },
@@ -208,11 +208,11 @@ class _PaymentPageState extends State<PaymentPage> {
                         ),
                       ),
                       SizedBox(width: 12),
-                      Text("در حال پردازش..."),
+                      Text("Processing..."),
                     ],
                   )
                       : const Text(
-                    "پرداخت",
+                    "Pay Now",
                     style: TextStyle(fontSize: 18),
                   ),
                 ),
@@ -221,7 +221,7 @@ class _PaymentPageState extends State<PaymentPage> {
 
                 // Help text
                 const Text(
-                  "راهنما: رمز کارت 4 کاراکتر آخر رمز عبور شما می‌باشد.",
+                  "Help: Your card PIN is the last 4 characters of your password.",
                   style: TextStyle(color: Colors.grey),
                   textAlign: TextAlign.center,
                 ),
