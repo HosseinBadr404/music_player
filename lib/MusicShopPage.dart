@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'MusicShopListPage.dart';
 import 'SignIn.dart';
-import 'profile_page.dart'; // Replace AccountPage with ProfilePage
+import 'profile_page.dart';
 import 'fake_user_data.dart';
 
 class MusicShopPage extends StatefulWidget {
@@ -20,6 +20,44 @@ class _MusicShopPageState extends State<MusicShopPage> {
     {'name': 'RAP', 'image': 'assets/images/rap-category.jpg'},
     {'name': 'ROCK', 'image': 'assets/images/rock-category.jpg'},
   ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+    if (index == 0) {
+      Navigator.pushReplacementNamed(context, '/');
+    }
+    // اگر index == 1 است، روی همین صفحه باقی می‌مانیم
+  }
+
+  void _navigateToProfile() {
+    if (FakeUserData.isLoggedIn()) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const ProfilePage(),
+        ),
+      ).then((_) {
+        // هنگام برگشت از ProfilePage، state را refresh می‌کنیم
+        if (mounted) {
+          setState(() {});
+        }
+      });
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const SignIn(),
+        ),
+      ).then((_) {
+        // هنگام برگشت از SignIn، state را refresh می‌کنیم
+        if (mounted) {
+          setState(() {});
+        }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,17 +78,8 @@ class _MusicShopPageState extends State<MusicShopPage> {
               selectedFontSize: 16,
               unselectedFontSize: 16,
               currentIndex: _selectedIndex,
-              onTap: (index) {
-                setState(() {
-                  _selectedIndex = index;
-                });
-                if (index == 0) {
-                  Navigator.pushNamed(context, '/');
-                } else if (index == 1) {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const MusicShopPage()));
-                }
-              },
-              items: [
+              onTap: _onItemTapped,
+              items: const [
                 BottomNavigationBarItem(
                   label: 'Home',
                   icon: SizedBox(
@@ -102,23 +131,7 @@ class _MusicShopPageState extends State<MusicShopPage> {
                     right: 0,
                     child: IconButton(
                       icon: const Icon(Icons.account_circle, color: Colors.white, size: 32),
-                      onPressed: () {
-                        if (FakeUserData.isLoggedIn()) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const ProfilePage(),
-                            ),
-                          );
-                        } else {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const SignIn(),
-                            ),
-                          );
-                        }
-                      },
+                      onPressed: _navigateToProfile,
                     ),
                   ),
                 ],

@@ -1,7 +1,8 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
-import 'payment_page.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'fake_user_data.dart';
 
 class MusicShopDetailPage extends StatefulWidget {
   final String title;
@@ -11,6 +12,7 @@ class MusicShopDetailPage extends StatefulWidget {
   final double price;
   final bool isFree;
   final int downloads;
+  final String audioFileName;
 
   const MusicShopDetailPage({
     super.key,
@@ -21,6 +23,7 @@ class MusicShopDetailPage extends StatefulWidget {
     required this.price,
     required this.isFree,
     required this.downloads,
+    required this.audioFileName,
   });
 
   @override
@@ -39,12 +42,17 @@ class _MusicShopDetailPageState extends State<MusicShopDetailPage> {
   @override
   void initState() {
     super.initState();
-    // Mock comments
+    if (FakeUserData.currentUser != null) {
+      isPurchased = FakeUserData.currentUser!.hasPurchased(widget.title);
+    }
+
     comments = [
       Comment(content: 'Great song!', likes: 10, dislikes: 2),
       Comment(content: 'Not bad.', likes: 5, dislikes: 3),
     ];
   }
+
+
 
   void _onItemTapped(int index) {
     setState(() {
@@ -74,11 +82,19 @@ class _MusicShopDetailPageState extends State<MusicShopDetailPage> {
     }
 
     try {
-      final downloadDir = await getDownloadsDirectory();
-      final filePath = '${downloadDir?.path}/dmusics/${widget.title}.mp3';
-      final file = File(filePath);
-      await file.create(recursive: true);
-      await file.writeAsString('Mock audio file');
+      // استفاده از نام فایل مخصوص هر موزیک
+      final ByteData data = await rootBundle.load('assets/${widget.audioFileName}');
+      final List<int> bytes = data.buffer.asUint8List();
+
+      // ایجاد مسیر دانلود
+      final Directory downloadDir = Directory('/storage/emulated/0/Download/dmusics');
+      if (!await downloadDir.exists()) {
+        await downloadDir.create(recursive: true);
+      }
+
+      final File file = File('${downloadDir.path}/${widget.title}.mp3');
+      await file.writeAsBytes(bytes);
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Download completed: ${widget.title}')),
       );
@@ -89,30 +105,85 @@ class _MusicShopDetailPageState extends State<MusicShopDetailPage> {
     }
     setState(() {
       isDownloading = false;
-      isPurchased = true;
     });
   }
 
-  void _purchaseSong() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => PaymentPage(
-          userPassword: "1234",
-          amount: widget.price,
-        ),
-      ),
-    );
 
-    if (result == true) {
+
+  void _purchaseSong() async {
+    if (FakeUserData.currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please login to your account first'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (widget.isFree) {
+      _downloadSong();
+      return;
+    }
+
+    if (FakeUserData.currentUser!.isSubscriptionActive) {
       setState(() {
         isPurchased = true;
       });
+      _downloadSong();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Purchase successful!')),
+        SnackBar(
+          content: Text('Downloaded with Premium subscription'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      return;
+    }
+
+    if (FakeUserData.currentUser!.balance < widget.price) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Insufficient balance'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // اگر موجودی کافی است، مستقیماً کم کن و دانلود کن
+    bool success = FakeUserData.currentUser!.deductBalance(widget.price);
+
+    if (success) {
+      setState(() {
+        isPurchased = true;
+      });
+
+      // اضافه کردن آهنگ به لیست خریداری شده
+      FakeUserData.currentUser!.purchasedMusic.add(widget.title);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Purchase successful! New balance: \$${FakeUserData.currentUser!.balance.toStringAsFixed(2)}'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      // شروع دانلود
+      _downloadSong();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error processing purchase'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
+
+
+
+
+
 
   void _submitComment() {
     if (_commentController.text.isNotEmpty) {
@@ -125,7 +196,16 @@ class _MusicShopDetailPageState extends State<MusicShopDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    bool canDownload = widget.isFree || isPurchased || hasSubscription;
+    bool isLoggedIn = FakeUserData.isLoggedIn();
+    bool hasSubscription = isLoggedIn && FakeUserData.currentUser!.isSubscriptionActive;
+    bool isPurchased = isLoggedIn && FakeUserData.currentUser!.purchasedMusic.contains(widget.title);
+
+    // بررسی اینکه آیا فایل دانلود شده یا نه
+    bool isFileDownloaded = false; // اینجا باید چک کنید فایل روی دستگاه هست یا نه
+
+    // منطق دکمه
+    bool showPurchaseButton = !widget.isFree && !hasSubscription && !isPurchased;
+    bool showDownloadButton = widget.isFree || hasSubscription || isPurchased;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -313,27 +393,39 @@ class _MusicShopDetailPageState extends State<MusicShopDetailPage> {
                       SizedBox(
                         width: double.infinity,
                         height: 50,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: !isLoggedIn
+                                  ? Colors.grey
+                                  : (showDownloadButton ? Colors.blue : Colors.orange),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
-                          ),
-                          onPressed: isDownloading ? null : (canDownload ? _downloadSong : _purchaseSong),
-                          child: Text(
-                            isDownloading
-                                ? 'Downloading...'
-                                : (canDownload
-                                ? 'Download Now'
-                                : 'Purchase for \$${widget.price.toStringAsFixed(2)}'),
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                            onPressed: !isLoggedIn
+                                ? null
+                                : (isDownloading
+                                ? null
+                                : (showDownloadButton ? _downloadSong : _purchaseSong)),
+                            child: Text(
+                              !isLoggedIn
+                                  ? 'Login Required'
+                                  : (isDownloading
+                                  ? 'Downloading...'
+                                  : (hasSubscription
+                                  ? 'Download Now (Premium)'
+                                  : (isPurchased
+                                  ? 'Download Now'
+                                  : (widget.isFree
+                                  ? 'Download Free'
+                                  : 'Purchase for \$${widget.price.toStringAsFixed(2)}')))),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                        ),
+                          )
                       ),
                     ],
                   ),

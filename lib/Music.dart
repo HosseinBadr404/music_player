@@ -8,7 +8,8 @@ class Music {
   final int downloads;
   final double rating;
   final String category;
-  final String audioBase64; // Base64 encoded audio file (mock data in this case)
+  final String audioBase64;
+  final String audioFileName;
 
   Music({
     required this.title,
@@ -19,6 +20,7 @@ class Music {
     required this.rating,
     required this.category,
     required this.audioBase64,
+    required this.audioFileName,
   });
 
   bool get isFree => price <= 0;
@@ -45,6 +47,7 @@ class MusicData {
         rating: 4.9,
         category: 'CLASSIC',
         audioBase64: getMockAudioBase64(),
+        audioFileName: 'sample_music.mp3',
       ),
       Music(
         title: 'The Four Seasons',
@@ -55,6 +58,7 @@ class MusicData {
         rating: 4.7,
         category: 'CLASSIC',
         audioBase64: getMockAudioBase64(),
+        audioFileName: 'sample_music.mp3',
       ),
       Music(
         title: 'Moonlight Sonata',
@@ -65,6 +69,7 @@ class MusicData {
         rating: 4.8,
         category: 'CLASSIC',
         audioBase64: getMockAudioBase64(),
+        audioFileName: 'sample_music.mp3',
       ),
       Music(
         title: 'Für Elise',
@@ -75,6 +80,7 @@ class MusicData {
         rating: 4.5,
         category: 'CLASSIC',
         audioBase64: getMockAudioBase64(),
+        audioFileName: 'sample_music.mp3',
       ),
 
       // POP category
@@ -87,6 +93,7 @@ class MusicData {
         rating: 4.5,
         category: 'POP',
         audioBase64: getMockAudioBase64(),
+        audioFileName: 'sample_music.mp3',
       ),
       Music(
         title: 'Blinding Lights',
@@ -97,6 +104,7 @@ class MusicData {
         rating: 4.7,
         category: 'POP',
         audioBase64: getMockAudioBase64(),
+        audioFileName: 'sample_music.mp3',
       ),
       Music(
         title: 'Bad Guy',
@@ -107,6 +115,7 @@ class MusicData {
         rating: 4.6,
         category: 'POP',
         audioBase64: getMockAudioBase64(),
+        audioFileName: 'sample_music.mp3',
       ),
       Music(
         title: 'As It Was',
@@ -117,6 +126,7 @@ class MusicData {
         rating: 4.8,
         category: 'POP',
         audioBase64: getMockAudioBase64(),
+        audioFileName: 'sample_music.mp3',
       ),
 
       // RAP category
@@ -129,6 +139,7 @@ class MusicData {
         rating: 4.9,
         category: 'RAP',
         audioBase64: getMockAudioBase64(),
+        audioFileName: 'sample_music.mp3',
       ),
       Music(
         title: 'SICKO MODE',
@@ -139,6 +150,7 @@ class MusicData {
         rating: 4.6,
         category: 'RAP',
         audioBase64: getMockAudioBase64(),
+        audioFileName: 'sample_music.mp3',
       ),
       Music(
         title: 'God\'s Plan',
@@ -149,6 +161,7 @@ class MusicData {
         rating: 4.7,
         category: 'RAP',
         audioBase64: getMockAudioBase64(),
+        audioFileName: 'sample_music.mp3',
       ),
       Music(
         title: 'Humble',
@@ -159,6 +172,7 @@ class MusicData {
         rating: 4.5,
         category: 'RAP',
         audioBase64: getMockAudioBase64(),
+        audioFileName: 'sample_music.mp3',
       ),
 
       // ROCK category
@@ -171,6 +185,7 @@ class MusicData {
         rating: 4.9,
         category: 'ROCK',
         audioBase64: getMockAudioBase64(),
+        audioFileName: 'sample_music.mp3',
       ),
       Music(
         title: 'Sweet Child O\' Mine',
@@ -181,6 +196,7 @@ class MusicData {
         rating: 4.8,
         category: 'ROCK',
         audioBase64: getMockAudioBase64(),
+        audioFileName: 'sample_music.mp3',
       ),
       Music(
         title: 'Stairway to Heaven',
@@ -191,6 +207,7 @@ class MusicData {
         rating: 4.9,
         category: 'ROCK',
         audioBase64: getMockAudioBase64(),
+        audioFileName: 'sample_music.mp3',
       ),
       Music(
         title: 'Back in Black',
@@ -201,6 +218,7 @@ class MusicData {
         rating: 4.7,
         category: 'ROCK',
         audioBase64: getMockAudioBase64(),
+        audioFileName: 'sample_music.mp3',
       ),
     ];
   }

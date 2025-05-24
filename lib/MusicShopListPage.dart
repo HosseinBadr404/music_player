@@ -39,6 +39,7 @@ class _MusicShopListPageState extends State<MusicShopListPage> {
       isFree: music.isFree,
       downloads: music.downloads,
       category: music.category,
+      audioFileName: music.audioFileName,
     )).toList();
 
     filteredMusicList = musicList;
@@ -238,6 +239,9 @@ class _MusicShopListPageState extends State<MusicShopListPage> {
                               price: filteredMusicList[index].price,
                               isFree: filteredMusicList[index].isFree,
                               downloads: filteredMusicList[index].downloads,
+                              audioFileName: filteredMusicList[index].audioFileName,
+
+
                             ),
                           ),
                         );
@@ -264,6 +268,7 @@ class _MusicShopListPageState extends State<MusicShopListPage> {
   final bool isFree;
   final int downloads;
   final String category;
+  final String audioFileName;
 
   const ShopMusicCard({
     super.key,
@@ -275,6 +280,7 @@ class _MusicShopListPageState extends State<MusicShopListPage> {
     required this.isFree,
     required this.downloads,
     required this.category,
+    required this.audioFileName,
   });
 
   @override
@@ -292,6 +298,7 @@ class _MusicShopListPageState extends State<MusicShopListPage> {
               price: price,
               isFree: isFree,
               downloads: downloads,
+                audioFileName: audioFileName
             ),
           ),
         );

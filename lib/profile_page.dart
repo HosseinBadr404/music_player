@@ -101,7 +101,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 48), // Balance the back button
+                        const SizedBox(width: 48),
                       ],
                     ),
                   ),
@@ -160,123 +160,51 @@ class _ProfilePageState extends State<ProfilePage> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Username row
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
                               'Username',
                               style: TextStyle(
-                                color: _currentTheme.brightness == Brightness.dark ? Colors.grey : Colors.grey[700],
-                                fontSize: 16,
+                                color: _currentTheme.brightness == Brightness.dark ? Colors.grey : Colors.grey[600],
+                                fontSize: 14,
                               ),
                             ),
-                            Text(
-                              username,
-                              style: TextStyle(
+                            IconButton(
+                              icon: Icon(
+                                Icons.edit,
                                 color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black,
-                                fontSize: 16,
+                                size: 20,
                               ),
+                              onPressed: _showEditProfileDialog,
                             ),
                           ],
                         ),
-
+                        Text(
+                          username,
+                          style: TextStyle(
+                            color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                         const SizedBox(height: 16),
-
-                        // Email row
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Email',
-                              style: TextStyle(
-                                color: _currentTheme.brightness == Brightness.dark ? Colors.grey : Colors.grey[700],
-                                fontSize: 16,
-                              ),
-                            ),
-                            Text(
-                              email,
-                              style: TextStyle(
-                                color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        // Edit Profile Button
-                        SizedBox(
-                          width: double.infinity,
-                          height: 45,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF005701),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            onPressed: _showEditProfileDialog,
-                            child: const Text(
-                              'Edit Profile',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
+                        Text(
+                          'Email',
+                          style: TextStyle(
+                            color: _currentTheme.brightness == Brightness.dark ? Colors.grey : Colors.grey[600],
+                            fontSize: 14,
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Available Credit
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                    decoration: BoxDecoration(
-                      color: _currentTheme.cardColor,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Available Credit',
-                              style: TextStyle(
-                                color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black,
-                                fontSize: 16,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '\$${credit.toStringAsFixed(2)}',
-                              style: const TextStyle(
-                                color: Color(0xFF4CAF50),
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _currentTheme.colorScheme.secondary,
-                            foregroundColor: const Color(0xFF4CAF50),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
+                        Text(
+                          email,
+                          style: TextStyle(
+                            color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
                           ),
-                          onPressed: () {
-                            _showAddCreditOptions();
-                          },
-                          child: const Text('Add Credit'),
                         ),
                       ],
                     ),
@@ -291,73 +219,196 @@ class _ProfilePageState extends State<ProfilePage> {
                       color: _currentTheme.cardColor,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Current Subscription',
-                              style: TextStyle(
-                                color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black,
-                                fontSize: 16,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              subscriptionPlan,
-                              style: TextStyle(
-                                color: _currentTheme.brightness == Brightness.dark ? Colors.grey : Colors.grey[700],
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
+                        Text(
+                          'Current Subscription',
+                          style: TextStyle(
+                            color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _currentTheme.colorScheme.secondary,
-                            foregroundColor: const Color(0xFF4CAF50),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
+                        const SizedBox(height: 16),
+
+                        if (FakeUserData.currentUser?.isSubscriptionActive == true) ...[
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(15),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: Colors.green),
+                            ),
+                            child: Column(
+                              children: [
+                                const Text(
+                                  'Premium Active',
+                                  style: TextStyle(
+                                    color: Colors.green,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 5),
+                                Text(
+                                  '${FakeUserData.currentUser!.remainingSubscriptionDays} days remaining',
+                                  style: const TextStyle(color: Colors.green),
+                                ),
+                              ],
                             ),
                           ),
-                          onPressed: _showSubscriptionOptions,
-                          child: const Text('Upgrade to Premium'),
-                        ),
+                        ] else ...[
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(15),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: Colors.orange),
+                            ),
+                            child: const Column(
+                              children: [
+                                Text(
+                                  'Standard Plan',
+                                  style: TextStyle(
+                                    color: Colors.orange,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(height: 5),
+                                Text(
+                                  'Upgrade to Premium for unlimited access',
+                                  style: TextStyle(color: Colors.orange),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () async {  // تغییر این خط
+                                final result = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => PaymentPage(
+                                      userPassword: "1234",
+                                      amount: 9.99,
+                                      isSubscription: true,
+                                    ),
+                                  ),
+                                );
+                                if (result == true) {
+                                  setState(() {
+                                    // کاربر را Premium کن
+                                    if (FakeUserData.currentUser != null) {
+                                      FakeUserData.currentUser!.subscriptionEndDate =
+                                          DateTime.now().add(Duration(days: 30));
+                                    }
+                                  });
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Premium subscription activated!'),
+                                      backgroundColor: Colors.green,
+                                    ),
+                                  );
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF6C63FF),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(25),
+                                ),
+                                padding: const EdgeInsets.symmetric(vertical: 15),
+                              ),
+                              child: const Text(
+                                'Upgrade to Premium',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+
+                          ),
+                        ],
                       ],
                     ),
                   ),
 
                   const SizedBox(height: 16),
 
-                  // Dark Theme Toggle
+                  // Available Credit
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                     decoration: BoxDecoration(
                       color: _currentTheme.cardColor,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Dark Theme',
+                          'Available Credit',
                           style: TextStyle(
                             color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black,
                             fontSize: 16,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        Switch(
-                          value: isDarkTheme,
-                          onChanged: (value) {
-                            setState(() {
-                              isDarkTheme = value;
-                              _updateTheme();
-                            });
-                          },
-                          activeColor: const Color(0xFF4CAF50),
-                          activeTrackColor: const Color(0xFF1E2E23),
+                        const SizedBox(height: 16),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(15),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.blue),
+                          ),
+                          child: Column(
+                            children: [
+                              Text(
+                                '\$${FakeUserData.currentUser?.balance.toStringAsFixed(2) ?? "0.00"}',
+                                style: const TextStyle(
+                                  color: Colors.blue,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              const Text(
+                                'Current Balance',
+                                style: TextStyle(color: Colors.blue),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: Container(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: _showAddCreditDialog,
+                              icon: const Icon(Icons.add, color: Colors.white),
+                              label: const Text(
+                                'Add Credit',
+                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF0842A8),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -365,30 +416,79 @@ class _ProfilePageState extends State<ProfilePage> {
 
                   const SizedBox(height: 16),
 
-                  // Delete Account Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                  // Settings
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    decoration: BoxDecoration(
+                      color: _currentTheme.cardColor,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Settings',
+                          style: TextStyle(
+                            color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      onPressed: _showDeleteAccountConfirmation,
-                      child: const Text(
-                        'Delete Account',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white,
+                        const SizedBox(height: 16),
+
+                        // Dark Mode Toggle
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Dark Mode',
+                              style: TextStyle(
+                                color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black,
+                                fontSize: 14,
+                              ),
+                            ),
+                            Switch(
+                              value: isDarkTheme,
+                              onChanged: (value) {
+                                setState(() {
+                                  isDarkTheme = value;
+                                  _updateTheme();
+                                });
+                              },
+                              activeColor: const Color(0xFF4CAF50),
+                            ),
+                          ],
                         ),
-                      ),
+
+                        const SizedBox(height: 16),
+
+                        // Logout Button
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _showLogoutConfirmation,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(25),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 15),
+                            ),
+                            child: const Text(
+                              'Logout',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
 
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 32),
                 ],
               ),
             ),
@@ -398,48 +498,28 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // Show image picker options
+  // Image picker method
   void _showImagePicker() {
     showModalBottomSheet(
       context: context,
       backgroundColor: _currentTheme.cardColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+        return SafeArea(
+          child: Wrap(
             children: [
-              Text(
-                'Change Profile Picture',
-                style: TextStyle(
-                  color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 20),
               ListTile(
-                leading: const Icon(Icons.photo_library, color: Color(0xFF4CAF50)),
-                title: Text(
-                  'Choose from Gallery',
-                  style: TextStyle(color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black),
-                ),
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Photo Library'),
                 onTap: () {
-                  _getImage(ImageSource.gallery);
+                  _pickImage(ImageSource.gallery);
                   Navigator.pop(context);
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.camera_alt, color: Color(0xFF4CAF50)),
-                title: Text(
-                  'Take a Photo',
-                  style: TextStyle(color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black),
-                ),
+                leading: const Icon(Icons.photo_camera),
+                title: const Text('Camera'),
                 onTap: () {
-                  _getImage(ImageSource.camera);
+                  _pickImage(ImageSource.camera);
                   Navigator.pop(context);
                 },
               ),
@@ -450,8 +530,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // Get image from source
-  Future<void> _getImage(ImageSource source) async {
+  Future<void> _pickImage(ImageSource source) async {
     try {
       final XFile? pickedFile = await _picker.pickImage(source: source);
       if (pickedFile != null) {
@@ -545,274 +624,138 @@ class _ProfilePageState extends State<ProfilePage> {
       },
     );
   }
+  void _showAddCreditDialog() {
+    final TextEditingController amountController = TextEditingController();
 
-  // Show subscription options with all three plans
-  void _showSubscriptionOptions() {
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      backgroundColor: _currentTheme.cardColor,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: _currentTheme.cardColor,
+          title: Text(
+            'Add Credit',
+            style: TextStyle(
+              color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black,
+            ),
+          ),
+          content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Premium Subscription',
+                'Enter amount to add to your account:',
                 style: TextStyle(
-                  color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+                  color: _currentTheme.brightness == Brightness.dark ? Colors.white70 : Colors.black87,
                 ),
               ),
-              const SizedBox(height: 20),
-
-              // Monthly Plan
-              _buildSubscriptionOption(
-                'Monthly Plan',
-                '\$9.99/month',
-                'Basic premium access',
-                    () {
-                  setState(() {
-                    subscriptionPlan = 'Premium (Monthly)';
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Subscribed to Monthly Plan')),
-                  );
-                },
-              ),
-
-              const SizedBox(height: 10),
-
-              // 3-Month Plan
-              _buildSubscriptionOption(
-                '3-Month Plan',
-                '\$24.99',
-                'Save 16% compared to monthly',
-                    () {
-                  setState(() {
-                    subscriptionPlan = 'Premium (3 Months)';
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Subscribed to 3-Month Plan')),
-                  );
-                },
-              ),
-
-              const SizedBox(height: 10),
-
-              // Yearly Plan
-              _buildSubscriptionOption(
-                'Yearly Plan',
-                '\$99.99/year',
-                'Save 17% compared to monthly',
-                    () {
-                  setState(() {
-                    subscriptionPlan = 'Premium (Yearly)';
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Subscribed to Yearly Plan')),
-                  );
-                },
-              ),
-
-              const SizedBox(height: 20),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  // Helper method to build subscription option card
-  Widget _buildSubscriptionOption(String title, String price, String description, VoidCallback onSelect) {
-    // Extract the numeric value from the price string
-    double amount = double.tryParse(price.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0.0;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: _currentTheme.brightness == Brightness.dark ? const Color(0xFF242424) : Colors.grey[100],
-        borderRadius: BorderRadius.circular(12),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  price,
-                  style: const TextStyle(
-                    color: Color(0xFF4CAF50),
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  description,
-                  style: TextStyle(
-                    color: _currentTheme.brightness == Brightness.dark ? Colors.grey : Colors.grey[700],
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4CAF50),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            onPressed: () {
-              _navigateToPaymentPage(amount); // Navigate to payment with the plan amount
-              onSelect(); // Original callback if needed
-            },
-            child: const Text('Select'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Add credit options
-  void _showAddCreditOptions() {
-    final amountController = TextEditingController();
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: _currentTheme.cardColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      isScrollControlled: true,
-      builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-            left: 20,
-            right: 20,
-            top: 20,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Add Credit',
-                style: TextStyle(
-                  color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
               TextField(
                 controller: amountController,
-                keyboardType: TextInputType.number,
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
                 decoration: InputDecoration(
-                  labelText: 'Enter amount',
+                  labelText: 'Amount (\$)',
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.attach_money),
+                  prefixText: '\$',
                   labelStyle: TextStyle(
-                    color: _currentTheme.brightness == Brightness.dark ? Colors.white70 : Colors.black87,
+                    color: _currentTheme.brightness == Brightness.dark ? Colors.white70 : Colors.black54,
                   ),
                 ),
                 style: TextStyle(
                   color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black,
                 ),
               ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Cancel'),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF4CAF50),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      onPressed: () {
-                        final amount = double.tryParse(amountController.text);
-                        if (amount != null && amount > 0) {
-                          Navigator.pop(context);
-                          _navigateToPaymentPage(amount);
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Please enter a valid amount')),
-                          );
-                        }
-                      },
-                      child: const Text('Proceed'),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
             ],
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final String amountText = amountController.text.trim();
+                if (amountText.isNotEmpty) {
+                  final double? amount = double.tryParse(amountText);
+                  if (amount != null && amount > 0) {
+                    Navigator.of(context).pop();
+                    _processAddCredit(amount);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Please enter a valid amount')),
+                    );
+                  }
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Please enter an amount')),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF4CAF50),
+              ),
+              child: Text('Add Credit'),
+            ),
+          ],
         );
       },
     );
   }
 
-  Future<void> _navigateToPaymentPage(double amount) async {
-    // For demo purposes, we'll use a fixed password
-    // In a real app, this would come from your authentication system
-    String userPassword = "password1234";
+  void _processAddCredit(double amount) async {
+    if (FakeUserData.currentUser == null) return;
 
-    // Navigate to payment page
-    final result = await Navigator.of(context).push(
+    final result = await Navigator.push(
+      context,
       MaterialPageRoute(
         builder: (context) => PaymentPage(
-          userPassword: userPassword,
+          userPassword: '1234', // PIN ثابت
           amount: amount,
         ),
       ),
     );
 
-    // Handle the payment result
     if (result == true) {
       setState(() {
-        credit += amount; // Update user's credit
+        FakeUserData.currentUser!.balance += amount;
+        credit = FakeUserData.currentUser!.balance;
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Successfully added \$${amount.toStringAsFixed(2)} to your account'),
+          content: Text('Successfully added \$${amount.toStringAsFixed(2)} to your account!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  }
+
+  void _upgradeToPremium() async {
+    const double premiumPrice = 9.99;
+
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PaymentPage(
+          userPassword: '1234', // PIN ثابت
+          amount: premiumPrice,
+        ),
+      ),
+    );
+
+    if (result == true) {
+      // Payment successful, upgrade user to premium
+      setState(() {
+        if (FakeUserData.currentUser != null) {
+          FakeUserData.currentUser!.subscriptionEndDate =
+              DateTime.now().add(Duration(days: 30));
+        }
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Successfully upgraded to Premium!'),
           backgroundColor: Colors.green,
         ),
       );
@@ -820,60 +763,41 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
 
-  // Quick amount button for adding credit
-  Widget _quickAmountButton(String amount) {
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: _currentTheme.colorScheme.secondary,
-        foregroundColor: const Color(0xFF4CAF50),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-      ),
-      onPressed: () {
-        setState(() {
-          credit += double.parse(amount.substring(1));
-        });
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$amount has been added to your account')),
-        );
-      },
-      child: Text(amount),
-    );
-  }
-
-  // Delete account confirmation
-  void _showDeleteAccountConfirmation() {
+  // Logout confirmation
+  void _showLogoutConfirmation() {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           backgroundColor: _currentTheme.cardColor,
           title: Text(
-            'Delete Account',
-            style: TextStyle(color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black),
+            'Logout',
+            style: TextStyle(
+              color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black,
+            ),
           ),
           content: Text(
-            'Are you sure you want to delete your account? This action cannot be undone.',
-            style: TextStyle(color: _currentTheme.brightness == Brightness.dark ? Colors.grey : Colors.grey[700]),
+            'Are you sure you want to logout?',
+            style: TextStyle(
+              color: _currentTheme.brightness == Brightness.dark ? Colors.grey : Colors.grey[700],
+            ),
           ),
           actions: [
             TextButton(
               child: Text(
                 'Cancel',
-                style: TextStyle(color: _currentTheme.brightness == Brightness.dark ? Colors.grey : Colors.grey[700]),
+                style: TextStyle(
+                  color: _currentTheme.brightness == Brightness.dark ? Colors.grey : Colors.grey[700],
+                ),
               ),
               onPressed: () => Navigator.pop(context),
             ),
             TextButton(
-              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+              child: const Text('Logout', style: TextStyle(color: Colors.red)),
               onPressed: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Account deletion initiated')),
-                );
+                FakeUserData.logout();
+                Navigator.pop(context); // Close dialog
+                Navigator.pop(context); // Go back to previous screen
               },
             ),
           ],
@@ -881,4 +805,9 @@ class _ProfilePageState extends State<ProfilePage> {
       },
     );
   }
+
+
+
+
+
 }
