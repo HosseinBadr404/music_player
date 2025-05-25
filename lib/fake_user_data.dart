@@ -2,9 +2,9 @@ class User {
   final String name;
   final String email;
   final String password;
-  double balance; // final را حذف کنید
+  double balance;
   final List<String> purchasedMusic;
-  DateTime? subscriptionEndDate; // اضافه کنید
+  DateTime? subscriptionEndDate;
 
   User({
     required this.name,
@@ -15,19 +15,16 @@ class User {
     this.subscriptionEndDate,
   });
 
-  // چک کردن اشتراک فعال
   bool get isSubscriptionActive {
     if (subscriptionEndDate == null) return false;
     return subscriptionEndDate!.isAfter(DateTime.now());
   }
 
-  // روزهای باقی‌مانده از اشتراک
   int get remainingSubscriptionDays {
     if (!isSubscriptionActive) return 0;
     return subscriptionEndDate!.difference(DateTime.now()).inDays;
   }
 
-  // کم کردن از موجودی
   bool deductBalance(double amount) {
     if (balance >= amount) {
       balance -= amount;
@@ -35,19 +32,24 @@ class User {
     }
     return false;
   }
+
   bool hasPurchased(String musicTitle) {
     return purchasedMusic.contains(musicTitle);
   }
 
-
-  // فعال کردن اشتراک پرمیوم
   void activatePremiumSubscription({int days = 30}) {
-    subscriptionEndDate = DateTime.now().add(Duration(days: days));
+    if (isSubscriptionActive) {
+      subscriptionEndDate = subscriptionEndDate!.add(Duration(days: days));
+    }
+    else {
+      subscriptionEndDate = DateTime.now().add(Duration(days: days));
+    }
   }
 
-  // اضافه کردن موجودی
   void addBalance(double amount) {
-    balance += amount;
+    if (amount > 0) {
+      balance += amount;
+    }
   }
 }
 
@@ -59,7 +61,7 @@ class FakeUserData {
       password: 'password123',
       balance: 1.0,
       purchasedMusic: ['Song 1', 'Song 2'],
-      subscriptionEndDate: null, // شروع بدون اشتراک
+      subscriptionEndDate: null,
     ),
     User(
       name: 'Sara Ahmadi',
@@ -70,7 +72,6 @@ class FakeUserData {
       subscriptionEndDate: DateTime.now().add(Duration(days: 15)),
     ),
   ];
-
   static User? currentUser;
 
   static bool login(String email, String password) {
@@ -89,6 +90,7 @@ class FakeUserData {
     if (users.any((user) => user.email == email)) {
       return false;
     }
+    // Create new user with initial balance of 10.0
     final newUser = User(
       name: name,
       email: email,

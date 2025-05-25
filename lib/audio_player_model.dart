@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 
+// Enum to represent different repeat modes for the player
 enum RepeatMode {
   off,
   all,
@@ -18,7 +19,6 @@ class AudioPlayerModel extends ChangeNotifier {
   bool _isShuffleEnabled = false;
   RepeatMode _repeatMode = RepeatMode.off;
   List<int> _shuffledIndices = [];
-
   AudioPlayer get audioPlayer => _audioPlayer;
   List<Map<String, String>> get playlist => _playlist;
   int get currentIndex => _currentIndex;
@@ -28,10 +28,12 @@ class AudioPlayerModel extends ChangeNotifier {
   Duration get duration => _duration;
   bool get isShuffleEnabled => _isShuffleEnabled;
   RepeatMode get repeatMode => _repeatMode;
-
   Map<String, String>? get currentTrack =>
-      _currentIndex >= 0 && _currentIndex < _playlist.length ? _playlist[_currentIndex] : null;
+      _currentIndex >= 0 && _currentIndex < _playlist.length
+          ? _playlist[_currentIndex]
+          : null;
 
+  // Constructor that sets up audio player listeners
   AudioPlayerModel() {
     _audioPlayer.playingStream.listen((playing) {
       _isPlaying = playing;
@@ -52,6 +54,7 @@ class AudioPlayerModel extends ChangeNotifier {
     });
   }
 
+  //shuffle mode on,off
   void toggleShuffle() {
     _isShuffleEnabled = !_isShuffleEnabled;
     if (_isShuffleEnabled) {
@@ -75,11 +78,12 @@ class AudioPlayerModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  //Generate a shuffled version of the playlist indices
   void _generateShuffledPlaylist() {
     _shuffledIndices = List.generate(_playlist.length, (index) => index);
     _shuffledIndices.shuffle();
 
-    // Make sure current track stays at current position
+    // If a track is currently playing move it to the front of the shuffled list
     if (_currentIndex >= 0 && _currentIndex < _shuffledIndices.length) {
       int currentTrackIndex = _shuffledIndices.indexOf(_currentIndex);
       if (currentTrackIndex != -1) {
@@ -91,7 +95,6 @@ class AudioPlayerModel extends ChangeNotifier {
 
   int _getNextIndex() {
     if (_playlist.isEmpty) return -1;
-
     if (_isShuffleEnabled) {
       if (_shuffledIndices.isEmpty) {
         _generateShuffledPlaylist();
@@ -104,7 +107,7 @@ class AudioPlayerModel extends ChangeNotifier {
           _generateShuffledPlaylist();
           return _shuffledIndices.first;
         }
-        return -1;
+        return -1; //End of playlist (no repeat)
       }
     } else {
       if (_currentIndex < _playlist.length - 1) {
@@ -118,7 +121,6 @@ class AudioPlayerModel extends ChangeNotifier {
 
   int _getPreviousIndex() {
     if (_playlist.isEmpty) return -1;
-
     if (_isShuffleEnabled) {
       if (_shuffledIndices.isEmpty) {
         _generateShuffledPlaylist();
@@ -138,6 +140,7 @@ class AudioPlayerModel extends ChangeNotifier {
     }
   }
 
+  //Handler for when a track completes playback
   void _onPlayerComplete() {
     if (_repeatMode == RepeatMode.one) {
       _audioPlayer.seek(Duration.zero);
@@ -159,6 +162,8 @@ class AudioPlayerModel extends ChangeNotifier {
       if (index < 0 || index >= playlist.length) {
         return;
       }
+
+      //If same track is already playing and playing do nothing
       if (_currentAudioPath == audioPath && _isPlaying) {
         return;
       }
@@ -173,7 +178,8 @@ class AudioPlayerModel extends ChangeNotifier {
         await _audioPlayer.play();
       }
       notifyListeners();
-    } catch (e) {}
+    } catch (e) {
+    }
   }
 
   Future<void> togglePlayPause() async {
@@ -209,6 +215,7 @@ class AudioPlayerModel extends ChangeNotifier {
     }
   }
 
+  //Clean up resources when model is disposed
   @override
   void dispose() {
     _audioPlayer.dispose();

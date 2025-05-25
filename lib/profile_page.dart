@@ -20,8 +20,11 @@ class _ProfilePageState extends State<ProfilePage> {
   final ImagePicker _picker = ImagePicker();
   bool isDarkTheme = true;
 
-  // Theme data
   late ThemeData _currentTheme;
+
+  bool _showChatDialog = false;
+  final TextEditingController _messageController = TextEditingController();
+  List<String> _chatMessages = [];
 
   @override
   void initState() {
@@ -62,6 +65,112 @@ class _ProfilePageState extends State<ProfilePage> {
     ),
   );
 
+  void _openAdminChat() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: _currentTheme.cardColor,
+              title: Row(
+                children: [
+                  Icon(
+                    Icons.admin_panel_settings,
+                    color: _currentTheme.primaryColor,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Chat with Admin',
+                    style: TextStyle(
+                      color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black,
+                    ),
+                  ),
+                ],
+              ),
+              content: SizedBox(
+                width: double.maxFinite,
+                height: 300,
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: ListView.builder(
+                          itemCount: _chatMessages.length,
+                          itemBuilder: (context, index) {
+                            return Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                _chatMessages[index],
+                                style: TextStyle(
+                                  color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _messageController,
+                            style: TextStyle(
+                              color: _currentTheme.brightness == Brightness.dark ? Colors.white : Colors.black,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: 'Type your message...',
+                              hintStyle: TextStyle(
+                                color: _currentTheme.brightness == Brightness.dark ? Colors.grey : Colors.grey[600],
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          onPressed: () {
+                            if (_messageController.text.isNotEmpty) {
+                              setState(() {
+                                _chatMessages.add('You: ${_messageController.text}');
+                                _messageController.clear();
+                              });
+                            }
+                          },
+                          icon: Icon(
+                            Icons.send,
+                            color: _currentTheme.primaryColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(
+                    'Close',
+                    style: TextStyle(color: _currentTheme.primaryColor),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     _updateTheme();
@@ -101,7 +210,14 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 48),
+                        IconButton(
+                          icon: Icon(
+                            Icons.chat_bubble_outline,
+                            color: _currentTheme.primaryColor,
+                          ),
+                          onPressed: _openAdminChat,
+                          tooltip: 'Chat with Admin',
+                        )
                       ],
                     ),
                   ),

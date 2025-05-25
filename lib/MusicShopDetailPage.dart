@@ -82,7 +82,6 @@ class _MusicShopDetailPageState extends State<MusicShopDetailPage> {
     }
 
     try {
-      // استفاده از نام فایل مخصوص هر موزیک
       final ByteData data = await rootBundle.load('assets/${widget.audioFileName}');
       final List<int> bytes = data.buffer.asUint8List();
 
@@ -150,7 +149,6 @@ class _MusicShopDetailPageState extends State<MusicShopDetailPage> {
       return;
     }
 
-    // اگر موجودی کافی است، مستقیماً کم کن و دانلود کن
     bool success = FakeUserData.currentUser!.deductBalance(widget.price);
 
     if (success) {
@@ -158,7 +156,6 @@ class _MusicShopDetailPageState extends State<MusicShopDetailPage> {
         isPurchased = true;
       });
 
-      // اضافه کردن آهنگ به لیست خریداری شده
       FakeUserData.currentUser!.purchasedMusic.add(widget.title);
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -168,7 +165,6 @@ class _MusicShopDetailPageState extends State<MusicShopDetailPage> {
         ),
       );
 
-      // شروع دانلود
       _downloadSong();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -179,11 +175,6 @@ class _MusicShopDetailPageState extends State<MusicShopDetailPage> {
       );
     }
   }
-
-
-
-
-
 
   void _submitComment() {
     if (_commentController.text.isNotEmpty) {
@@ -200,10 +191,8 @@ class _MusicShopDetailPageState extends State<MusicShopDetailPage> {
     bool hasSubscription = isLoggedIn && FakeUserData.currentUser!.isSubscriptionActive;
     bool isPurchased = isLoggedIn && FakeUserData.currentUser!.purchasedMusic.contains(widget.title);
 
-    // بررسی اینکه آیا فایل دانلود شده یا نه
-    bool isFileDownloaded = false; // اینجا باید چک کنید فایل روی دستگاه هست یا نه
+    bool isFileDownloaded = false;
 
-    // منطق دکمه
     bool showPurchaseButton = !widget.isFree && !hasSubscription && !isPurchased;
     bool showDownloadButton = widget.isFree || hasSubscription || isPurchased;
 

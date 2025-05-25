@@ -136,7 +136,10 @@ class _MusicShopPageState extends State<MusicShopPage> {
                   ),
                 ],
               ),
-              const SizedBox(height: 35),
+              const SizedBox(height: 20),
+              // Advertisement Banner
+              _buildAdvertisementBanner(),
+              const SizedBox(height: 20),
               Expanded(
                 child: ListView.separated(
                   itemCount: categories.length,
@@ -152,6 +155,96 @@ class _MusicShopPageState extends State<MusicShopPage> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  // Simple Advertisement Banner Widget
+  Widget _buildAdvertisementBanner() {
+    return Container(
+      height: 80,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        gradient: LinearGradient(
+          colors: [
+            Colors.purple.withOpacity(0.8),
+            Colors.blue.withOpacity(0.8),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.purple.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          const Expanded(
+            flex: 3,
+            child: Padding(
+              padding: EdgeInsets.all(12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '🎵 Premium Music',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Get 50% OFF on all albums!',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 1,
+            child: Container(
+              margin: const EdgeInsets.all(8),
+              child: ElevatedButton(
+                onPressed: () {
+                  // Add your advertisement action here
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Advertisement clicked!'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.purple,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                ),
+                child: const Text(
+                  'SHOP',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
