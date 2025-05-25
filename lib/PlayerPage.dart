@@ -46,7 +46,6 @@ class PlayerPage extends StatelessWidget {
     }
 
     return Scaffold(
-
       backgroundColor: Colors.black,
       appBar: AppBar(
         title: Text(
@@ -160,22 +159,32 @@ class PlayerPage extends StatelessWidget {
             // Spacer to push controls to bottom
             const SizedBox(height: 25),
 
-            // Control buttons with modern design
+            // All control buttons in one row
             Container(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
+                  // Shuffle button
+                  IconButton(
+                    icon: Icon(
+                      Icons.shuffle_rounded,
+                      color: audioModel.isShuffleEnabled ? Colors.white : Colors.grey[600],
+                      size: 28,
+                    ),
+                    onPressed: audioModel.toggleShuffle,
+                  ),
+
                   // Previous button
                   IconButton(
                     icon: const Icon(Icons.skip_previous_rounded, color: Colors.white, size: 32),
-                    onPressed: audioModel.currentIndex > 0 ? audioModel.playPrevious : null,
+                    onPressed: audioModel.playPrevious,
                   ),
 
                   // Play/Pause button
                   Container(
                     width: 65,
                     height: 65,
-                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    margin: const EdgeInsets.symmetric(horizontal: 8),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [Colors.grey.shade200, Colors.white],
@@ -207,7 +216,19 @@ class PlayerPage extends StatelessWidget {
                   // Next button
                   IconButton(
                     icon: const Icon(Icons.skip_next_rounded, color: Colors.white, size: 32),
-                    onPressed: audioModel.currentIndex < playlist.length - 1 ? audioModel.playNext : null,
+                    onPressed: audioModel.playNext,
+                  ),
+
+                  // Repeat button
+                  IconButton(
+                    icon: Icon(
+                      audioModel.repeatMode == RepeatMode.one
+                          ? Icons.repeat_one_rounded
+                          : Icons.repeat_rounded,
+                      color: audioModel.repeatMode != RepeatMode.off ? Colors.white : Colors.grey[600],
+                      size: 28,
+                    ),
+                    onPressed: audioModel.toggleRepeat,
                   ),
                 ],
               ),

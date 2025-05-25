@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 
+enum RepeatMode {
+  off,
+  all,
+  one,
+}
+
 class AudioPlayerModel extends ChangeNotifier {
   final AudioPlayer _audioPlayer = AudioPlayer();
   List<Map<String, String>> _playlist = [];
@@ -9,6 +15,9 @@ class AudioPlayerModel extends ChangeNotifier {
   bool _isPlaying = false;
   Duration _position = Duration.zero;
   Duration _duration = Duration.zero;
+  bool _isShuffleEnabled = false;
+  RepeatMode _repeatMode = RepeatMode.off;
+  List<int> _shuffledIndices = [];
 
   AudioPlayer get audioPlayer => _audioPlayer;
   List<Map<String, String>> get playlist => _playlist;
@@ -17,6 +26,8 @@ class AudioPlayerModel extends ChangeNotifier {
   bool get isPlaying => _isPlaying;
   Duration get position => _position;
   Duration get duration => _duration;
+  bool get isShuffleEnabled => _isShuffleEnabled;
+  RepeatMode get repeatMode => _repeatMode;
 
   Map<String, String>? get currentTrack =>
       _currentIndex >= 0 && _currentIndex < _playlist.length ? _playlist[_currentIndex] : null;
@@ -36,9 +47,111 @@ class AudioPlayerModel extends ChangeNotifier {
     });
     _audioPlayer.processingStateStream.listen((state) {
       if (state == ProcessingState.completed) {
-        playNext();
+        _onPlayerComplete();
       }
     });
+  }
+
+  void toggleShuffle() {
+    _isShuffleEnabled = !_isShuffleEnabled;
+    if (_isShuffleEnabled) {
+      _generateShuffledPlaylist();
+    }
+    notifyListeners();
+  }
+
+  void toggleRepeat() {
+    switch (_repeatMode) {
+      case RepeatMode.off:
+        _repeatMode = RepeatMode.all;
+        break;
+      case RepeatMode.all:
+        _repeatMode = RepeatMode.one;
+        break;
+      case RepeatMode.one:
+        _repeatMode = RepeatMode.off;
+        break;
+    }
+    notifyListeners();
+  }
+
+  void _generateShuffledPlaylist() {
+    _shuffledIndices = List.generate(_playlist.length, (index) => index);
+    _shuffledIndices.shuffle();
+
+    // Make sure current track stays at current position
+    if (_currentIndex >= 0 && _currentIndex < _shuffledIndices.length) {
+      int currentTrackIndex = _shuffledIndices.indexOf(_currentIndex);
+      if (currentTrackIndex != -1) {
+        _shuffledIndices.removeAt(currentTrackIndex);
+        _shuffledIndices.insert(0, _currentIndex);
+      }
+    }
+  }
+
+  int _getNextIndex() {
+    if (_playlist.isEmpty) return -1;
+
+    if (_isShuffleEnabled) {
+      if (_shuffledIndices.isEmpty) {
+        _generateShuffledPlaylist();
+      }
+      int currentShuffleIndex = _shuffledIndices.indexOf(_currentIndex);
+      if (currentShuffleIndex < _shuffledIndices.length - 1) {
+        return _shuffledIndices[currentShuffleIndex + 1];
+      } else {
+        if (_repeatMode == RepeatMode.all) {
+          _generateShuffledPlaylist();
+          return _shuffledIndices.first;
+        }
+        return -1;
+      }
+    } else {
+      if (_currentIndex < _playlist.length - 1) {
+        return _currentIndex + 1;
+      } else if (_repeatMode == RepeatMode.all) {
+        return 0;
+      }
+      return -1;
+    }
+  }
+
+  int _getPreviousIndex() {
+    if (_playlist.isEmpty) return -1;
+
+    if (_isShuffleEnabled) {
+      if (_shuffledIndices.isEmpty) {
+        _generateShuffledPlaylist();
+      }
+      int currentShuffleIndex = _shuffledIndices.indexOf(_currentIndex);
+      if (currentShuffleIndex > 0) {
+        return _shuffledIndices[currentShuffleIndex - 1];
+      } else {
+        return _shuffledIndices.last;
+      }
+    } else {
+      if (_currentIndex > 0) {
+        return _currentIndex - 1;
+      } else {
+        return _playlist.length - 1;
+      }
+    }
+  }
+
+  void _onPlayerComplete() {
+    if (_repeatMode == RepeatMode.one) {
+      _audioPlayer.seek(Duration.zero);
+      _audioPlayer.play();
+    } else {
+      int nextIndex = _getNextIndex();
+      if (nextIndex != -1) {
+        playTrack(_playlist[nextIndex]['audioPath']!, _playlist, nextIndex);
+      } else {
+        _isPlaying = false;
+        _position = Duration.zero;
+        notifyListeners();
+      }
+    }
   }
 
   Future<void> playTrack(String audioPath, List<Map<String, String>> playlist, int index) async {
@@ -78,8 +191,8 @@ class AudioPlayerModel extends ChangeNotifier {
   }
 
   Future<void> playNext() async {
-    if (_currentIndex < _playlist.length - 1) {
-      final nextIndex = _currentIndex + 1;
+    int nextIndex = _getNextIndex();
+    if (nextIndex != -1) {
       await playTrack(_playlist[nextIndex]['audioPath']!, _playlist, nextIndex);
     } else {
       await _audioPlayer.stop();
@@ -90,9 +203,9 @@ class AudioPlayerModel extends ChangeNotifier {
   }
 
   Future<void> playPrevious() async {
-    if (_currentIndex > 0) {
-      final prevIndex = _currentIndex - 1;
-      await playTrack(_playlist[prevIndex]['audioPath']!, _playlist, prevIndex);
+    int previousIndex = _getPreviousIndex();
+    if (previousIndex != -1) {
+      await playTrack(_playlist[previousIndex]['audioPath']!, _playlist, previousIndex);
     }
   }
 
