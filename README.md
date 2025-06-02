@@ -15,3 +15,7 @@ For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
 # music_player
+
+
+
+![Screenshot 2025-06-02 160114](https://github.com/user-attachments/assets/3f0cb8e2-68d6-4001-846b-4aa24fcfee1a)
