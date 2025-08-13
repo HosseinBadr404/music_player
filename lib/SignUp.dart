@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'SignIn.dart';
-import 'fake_user_data.dart';
+import 'User.dart';
 
 class SignUp extends StatefulWidget {
   const SignUp({super.key});
@@ -16,10 +16,11 @@ class _SignUpState extends State<SignUp> {
   bool isObscure = true;
   String? emailError;
   String? signupError;
+  bool isLoading = false;
 
   final emailRegex = RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$");
 
-  void validateAndSignUp() {
+  Future<void> validateAndSignUp() async {
     final username = usernameController.text.trim();
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
@@ -27,24 +28,35 @@ class _SignUpState extends State<SignUp> {
     setState(() {
       emailError = null;
       signupError = null;
+      isLoading = true;
     });
 
     if (username.isEmpty) {
-      setState(() => signupError = "Username cannot be empty");
+      setState(() {
+        signupError = "Username cannot be empty";
+        isLoading = false;
+      });
       return;
     }
 
     if (!emailRegex.hasMatch(email)) {
-      setState(() => emailError = "Email is not valid");
+      setState(() {
+        emailError = "Email is not valid";
+        isLoading = false;
+      });
       return;
     }
 
     if (password.isEmpty) {
-      setState(() => signupError = "Password cannot be empty");
+      setState(() {
+        signupError = "Password cannot be empty";
+        isLoading = false;
+      });
       return;
     }
 
-    final success = FakeUserData.signUp(username, email, password);
+    final success = await UserData.signUp(username, email, password);
+    setState(() => isLoading = false);
     if (success) {
       Navigator.pushNamedAndRemoveUntil(context, '/music_shop', (route) => false);
     } else {
@@ -65,10 +77,8 @@ class _SignUpState extends State<SignUp> {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 IconButton(
-                  icon: Icon(Icons.arrow_back, color: Colors.white),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  onPressed: () => Navigator.pop(context),
                 ),
                 Expanded(
                   child: Center(
@@ -83,7 +93,7 @@ class _SignUpState extends State<SignUp> {
                     ),
                   ),
                 ),
-                SizedBox(width: 48),
+                const SizedBox(width: 48),
               ],
             ),
             Expanded(
@@ -97,9 +107,7 @@ class _SignUpState extends State<SignUp> {
                   ),
                   child: SingleChildScrollView(
                     child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxWidth: 400,
-                      ),
+                      constraints: const BoxConstraints(maxWidth: 400),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -199,9 +207,7 @@ class _SignUpState extends State<SignUp> {
                                   isObscure ? Icons.visibility_off : Icons.visibility,
                                   color: Colors.grey,
                                 ),
-                                onPressed: () {
-                                  setState(() => isObscure = !isObscure);
-                                },
+                                onPressed: () => setState(() => isObscure = !isObscure),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(35),
@@ -222,7 +228,7 @@ class _SignUpState extends State<SignUp> {
                           ],
                           const SizedBox(height: 30),
                           ElevatedButton(
-                            onPressed: validateAndSignUp,
+                            onPressed: isLoading ? null : validateAndSignUp,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF5B50FE),
                               shape: RoundedRectangleBorder(
@@ -230,9 +236,11 @@ class _SignUpState extends State<SignUp> {
                               ),
                               minimumSize: const Size(double.infinity, 50),
                             ),
-                            child: Text(
+                            child: isLoading
+                                ? const CircularProgressIndicator(color: Colors.white)
+                                : const Text(
                               'Sign up',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontFamily: 'PlayfairDisplay',
                                 fontWeight: FontWeight.bold,
                               ),
@@ -243,12 +251,10 @@ class _SignUpState extends State<SignUp> {
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               TextButton(
-                                onPressed: () {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(builder: (context) => SignIn()),
-                                  );
-                                },
+                                onPressed: () => Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const SignIn()),
+                                ),
                                 child: const Text(
                                   'Sign in',
                                   style: TextStyle(

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'SignUp.dart';
-import 'fake_user_data.dart';
+import 'User.dart';
 
 class SignIn extends StatefulWidget {
   const SignIn({super.key});
@@ -15,29 +15,38 @@ class _SignInState extends State<SignIn> {
   bool isObscure = true;
   String? emailError;
   String? loginError;
+  bool isLoading = false;
 
   final emailRegex = RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$");
 
-  void validateAndSignIn() {
+  Future<void> validateAndSignIn() async {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
 
     setState(() {
       emailError = null;
       loginError = null;
+      isLoading = true;
     });
 
     if (!emailRegex.hasMatch(email)) {
-      setState(() => emailError = "Email is not valid");
+      setState(() {
+        emailError = "Email is not valid";
+        isLoading = false;
+      });
       return;
     }
 
     if (password.isEmpty) {
-      setState(() => loginError = "Password cannot be empty");
+      setState(() {
+        loginError = "Password cannot be empty";
+        isLoading = false;
+      });
       return;
     }
 
-    final success = FakeUserData.login(email, password);
+    final success = await UserData.login(email, password);
+    setState(() => isLoading = false);
     if (success) {
       Navigator.pushNamedAndRemoveUntil(context, '/music_shop', (route) => false);
     } else {
@@ -58,10 +67,8 @@ class _SignInState extends State<SignIn> {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 IconButton(
-                  icon: Icon(Icons.arrow_back, color: Colors.white),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  onPressed: () => Navigator.pop(context),
                 ),
                 Expanded(
                   child: Center(
@@ -76,7 +83,7 @@ class _SignInState extends State<SignIn> {
                     ),
                   ),
                 ),
-                SizedBox(width: 48),
+                const SizedBox(width: 48),
               ],
             ),
             Expanded(
@@ -90,9 +97,7 @@ class _SignInState extends State<SignIn> {
                   ),
                   child: SingleChildScrollView(
                     child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxWidth: 400,
-                      ),
+                      constraints: const BoxConstraints(maxWidth: 400),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -159,9 +164,7 @@ class _SignInState extends State<SignIn> {
                                   isObscure ? Icons.visibility_off : Icons.visibility,
                                   color: Colors.grey,
                                 ),
-                                onPressed: () {
-                                  setState(() => isObscure = !isObscure);
-                                },
+                                onPressed: () => setState(() => isObscure = !isObscure),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(35),
@@ -182,7 +185,7 @@ class _SignInState extends State<SignIn> {
                           ],
                           const SizedBox(height: 30),
                           ElevatedButton(
-                            onPressed: validateAndSignIn,
+                            onPressed: isLoading ? null : validateAndSignIn,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF5B50FE),
                               shape: RoundedRectangleBorder(
@@ -190,9 +193,11 @@ class _SignInState extends State<SignIn> {
                               ),
                               minimumSize: const Size(double.infinity, 50),
                             ),
-                            child: Text(
+                            child: isLoading
+                                ? const CircularProgressIndicator(color: Colors.white)
+                                : const Text(
                               'Sign in',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontFamily: 'PlayfairDisplay',
                                 fontWeight: FontWeight.bold,
                               ),
@@ -203,12 +208,10 @@ class _SignInState extends State<SignIn> {
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               TextButton(
-                                onPressed: () {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(builder: (context) => SignUp()),
-                                  );
-                                },
+                                onPressed: () => Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const SignUp()),
+                                ),
                                 child: const Text(
                                   'Sign up',
                                   style: TextStyle(
